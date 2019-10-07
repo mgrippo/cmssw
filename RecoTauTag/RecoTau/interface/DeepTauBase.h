@@ -24,6 +24,12 @@
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include <TF1.h>
+#include "DataFormats/TauReco/interface/PFTau.h"
+#include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
+#include "DataFormats/Candidate/interface/LeafCandidate.h"
+#include "DataFormats/TrackReco/interface/HitPattern.h"
+
+
 
 namespace deep_tau {
 
@@ -57,8 +63,10 @@ private:
 
 class DeepTauBase : public edm::stream::EDProducer<edm::GlobalCache<DeepTauCache>> {
 public:
-    using TauType = pat::Tau;
-    using TauDiscriminator = pat::PATTauDiscriminator;
+    //using TauType = pat::Tau;
+    //using TauDiscriminator = pat::PATTauDiscriminator;
+    using TauType = reco::PFTau;
+    using TauDiscriminator = reco::PFTauDiscriminator;
     using TauCollection = std::vector<TauType>;
     using TauRef = edm::Ref<TauCollection>;
     using TauRefProd = edm::RefProd<TauCollection>;
@@ -96,7 +104,8 @@ private:
 
 protected:
     edm::EDGetTokenT<TauCollection> tausToken_;
-    edm::EDGetTokenT<pat::PackedCandidateCollection> pfcandToken_;
+    //edm::EDGetTokenT<pat::PackedCandidateCollection> pfcandToken_;
+    edm::EDGetTokenT<std::vector<reco::PFCandidate>> pfcandToken_;
     edm::EDGetTokenT<reco::VertexCollection> vtxToken_;
     std::map<std::string, WPMap> workingPoints_;
     OutputCollection outputs_;

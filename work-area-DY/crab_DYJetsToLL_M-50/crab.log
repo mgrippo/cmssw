@@ -1,0 +1,157 @@
+DEBUG 2019-10-07 12:48:52.561 UTC: 	 Executing command: 'submit'
+DEBUG 2019-10-07 12:48:52.572 UTC: 	 Found CRAB cache file /afs/cern.ch/user/m/mgrippo/.crab3
+DEBUG 2019-10-07 12:48:52.578 UTC: 	 Checking credentials
+DEBUG 2019-10-07 12:48:52.578 UTC: 	 Found proxy file /tmp/x509up_u9475
+DEBUG 2019-10-07 12:48:52.578 UTC: 	 Getting proxy life time left
+DEBUG 2019-10-07 12:48:53.283 UTC: 	 Executing : 
+ command : voms-proxy-info -file /tmp/x509up_u9475 -timeleft
+ output : 601599
+
+ error: 
+ retcode : 0
+DEBUG 2019-10-07 12:48:53.989 UTC: 	 Executing : 
+ command : voms-proxy-info -file /tmp/x509up_u9475 -actimeleft
+ output : 601599
+
+ error: 
+ retcode : 0
+DEBUG 2019-10-07 12:48:53.989 UTC: 	 Proxy valid for 167:06:39 hours
+DEBUG 2019-10-07 12:48:53.989 UTC: 	 Will use CRAB Analysis plugin (i.e. will run an analysis job type).
+DEBUG 2019-10-07 12:48:54.112 UTC: 	 Executing : 
+ command : openssl x509 -in ~/.globus/usercert.pem -subject -noout
+ output : subject= /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=mgrippo/CN=721669/CN=Maria Teresa Grippo
+
+ error: 
+ retcode : 0
+DEBUG 2019-10-07 12:48:54.113 UTC: 	 Checking credentials
+DEBUG 2019-10-07 12:48:54.113 UTC: 	 Found proxy file /tmp/x509up_u9475
+DEBUG 2019-10-07 12:48:54.113 UTC: 	 Getting proxy life time left
+DEBUG 2019-10-07 12:48:54.819 UTC: 	 Executing : 
+ command : voms-proxy-info -file /tmp/x509up_u9475 -timeleft
+ output : 601598
+
+ error: 
+ retcode : 0
+DEBUG 2019-10-07 12:48:55.524 UTC: 	 Executing : 
+ command : voms-proxy-info -file /tmp/x509up_u9475 -actimeleft
+ output : 601597
+
+ error: 
+ retcode : 0
+DEBUG 2019-10-07 12:48:55.525 UTC: 	 Proxy lifetime 601598 secs is different from voms extension lifetime 601597 secs for proxy: /tmp/x509up_u9475
+DEBUG 2019-10-07 12:48:55.525 UTC: 	 Proxy valid for 167:06:37 hours
+DEBUG 2019-10-07 12:48:56.130 UTC: 	 Executing : 
+ command : env X509_USER_PROXY=/tmp/x509up_u9475 voms-proxy-info -fqan
+ output : /cms/Role=NULL/Capability=NULL
+/cms/itcms/Role=NULL/Capability=NULL
+
+ error: 
+ retcode : 0
+DEBUG 2019-10-07 12:48:56.201 UTC: 	 Registering user credentials for server /DC=ch/DC=cern/OU=computers/CN=vocms(052|058|030|0118|0105|0109).cern.ch|/DC=ch/DC=cern/OU=computers/CN=crab-(preprod|prod)-tw(02|01).cern.ch
+DEBUG 2019-10-07 12:48:56.312 UTC: 	 Executing : 
+ command : openssl x509 -in ~/.globus/usercert.pem -subject -noout
+ output : subject= /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=mgrippo/CN=721669/CN=Maria Teresa Grippo
+
+ error: 
+ retcode : 0
+DEBUG 2019-10-07 12:48:56.312 UTC: 	 Getting myproxy life time left for myproxy.cern.ch
+DEBUG 2019-10-07 12:48:56.312 UTC: 	 Calculating hash of /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=mgrippo/CN=721669/CN=Maria Teresa Grippo_cmsweb.cern.ch for credential name
+DEBUG 2019-10-07 12:48:56.516 UTC: 	 Executing : 
+ command : myproxy-info -l 16d83c914b56466fbf1cf50617e4b5e2888f73bc -s myproxy.cern.ch
+ output : username: 16d83c914b56466fbf1cf50617e4b5e2888f73bc
+owner: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=mgrippo/CN=721669/CN=Maria Teresa Grippo
+  renewal policy: /DC=ch/DC=cern/OU=computers/CN=vocms(052|058|030|0118|0105|0109).cern.ch|/DC=ch/DC=cern/OU=computers/CN=crab-(preprod|prod)-tw(02|01).cern.ch
+  trusted retrieval policy: /DC=ch/DC=cern/OU=computers/CN=vocms(052|058|030|0118|0105|0109).cern.ch|/DC=ch/DC=cern/OU=computers/CN=crab-(preprod|prod)-tw(02|01).cern.ch
+  timeleft: 719:20:15  (30.0 days)
+
+ error: 
+ retcode : 0
+DEBUG 2019-10-07 12:48:56.517 UTC: 	 Myproxy is valid: 2589615
+DEBUG 2019-10-07 12:48:56.517 UTC: 	 Command use: submit
+DEBUG 2019-10-07 12:48:56.517 UTC: 	 Options use: ['--config', <WMCore.Configuration.Configuration object at 0x7f05af0dbbd0>]
+DEBUG 2019-10-07 12:48:56.588 UTC: 	 CRABClient version: 3.3.1909
+DEBUG 2019-10-07 12:48:56.588 UTC: 	 Instance is prod
+DEBUG 2019-10-07 12:48:56.588 UTC: 	 Server base url is cmsweb.cern.ch
+DEBUG 2019-10-07 12:48:56.588 UTC: 	 Command url /crabserver/prod/workflow
+DEBUG 2019-10-07 12:48:56.588 UTC: 	 Started submission
+DEBUG 2019-10-07 12:48:56.588 UTC: 	 Working on /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/work-area-DY/crab_DYJetsToLL_M-50
+DEBUG 2019-10-07 12:48:56.977 UTC: 	 Loading required information from the environment
+DEBUG 2019-10-07 12:48:56.977 UTC: 	 Found CMSSW_10_6_3 for slc7_amd64_gcc700 with base /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3
+DEBUG 2019-10-07 12:48:56.977 UTC: 	 Loading required information from the environment
+DEBUG 2019-10-07 12:48:56.977 UTC: 	 Found CMSSW_10_6_3 for slc7_amd64_gcc700 with base /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3
+DEBUG 2019-10-07 12:48:56.994 UTC: 	 UNIQUE NAME: tarUUID 478535c5-8784-4a1f-9bfb-df260a0e75e1 
+DEBUG 2019-10-07 12:48:56.995 UTC: 	 self.config: from WMCore.Configuration import Configuration
+config = Configuration()
+config.section_('General')
+config.General.transferLogs = False
+config.General.transferOutputs = True
+config.General.workArea = 'work-area-DY'
+config.General.requestName = 'DYJetsToLL_M-50'
+config.section_('JobType')
+config.JobType.psetName = 'tau_hlt.py'
+config.JobType.pluginName = 'Analysis'
+config.JobType.numCores = 1
+config.JobType.maxMemoryMB = 2000
+config.JobType.pyCfgParams = ['wantSummary=True']
+config.section_('Data')
+config.Data.inputDataset = '/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall18wmLHEGS-102X_upgrade2018_realistic_v11-v1/GEN-SIM'
+config.Data.allowNonValidInputDataset = False
+config.Data.publication = False
+config.Data.unitsPerJob = 1000
+config.Data.splitting = 'Automatic'
+config.Data.inputDBS = 'global'
+config.Data.outLFNDirBase = '/store/user/mgrippo/deeptau_hlt'
+config.Data.lumiMask = ''
+config.section_('Site')
+config.Site.storageSite = 'T2_IT_Legnaro'
+config.section_('User')
+config.section_('Debug')
+
+DEBUG 2019-10-07 12:48:56.995 UTC: 	 self.config.JobType.psetName: tau_hlt.py
+INFO 2019-10-07 12:48:56.995 UTC: 	 Importing CMSSW configuration tau_hlt.py
+DEBUG 2019-10-07 12:48:56.995 UTC: 	 Additional parameters for the CMSSW configuration are: ['wantSummary=True']
+INFO 2019-10-07 12:49:00.710 UTC: 	 Finished importing CMSSW configuration tau_hlt.py
+DEBUG 2019-10-07 12:49:00.710 UTC: 	 Writing CMSSW configuration to /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/work-area-DY/crab_DYJetsToLL_M-50/inputs/PSet.py
+DEBUG 2019-10-07 12:49:02.044 UTC: 	 The following EDM output files will be collected: []
+DEBUG 2019-10-07 12:49:02.044 UTC: 	 The following TFile output files will be collected: ['deepTauTuple_DY.root']
+DEBUG 2019-10-07 12:49:02.044 UTC: 	 The following user output files will be collected: []
+DEBUG 2019-10-07 12:49:02.044 UTC: 	 Loading required information from the environment
+DEBUG 2019-10-07 12:49:02.044 UTC: 	 Found CMSSW_10_6_3 for slc7_amd64_gcc700 with base /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3
+DEBUG 2019-10-07 12:49:02.044 UTC: 	 Making tarball in /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/work-area-DY/crab_DYJetsToLL_M-50/inputs/478535c5-8784-4a1f-9bfb-df260a0e75e1default.tgz
+DEBUG 2019-10-07 12:49:02.045 UTC: 	 Checking directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/lib
+DEBUG 2019-10-07 12:49:02.046 UTC: 	 Adding directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/lib to tarball
+DEBUG 2019-10-07 12:49:07.047 UTC: 	 Checking directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/biglib
+DEBUG 2019-10-07 12:49:07.047 UTC: 	 Adding directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/biglib to tarball
+DEBUG 2019-10-07 12:49:07.048 UTC: 	 Checking directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/module
+DEBUG 2019-10-07 12:49:08.740 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/RecoTauTag/RecoTau/data to tarball
+DEBUG 2019-10-07 12:49:08.766 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/RecoTauTag/RecoTau/interface to tarball
+DEBUG 2019-10-07 12:49:09.000 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/RecoTauTag/HLTProducers/interface to tarball
+DEBUG 2019-10-07 12:49:09.011 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/RecoTauTag/ImpactParameter/interface to tarball
+DEBUG 2019-10-07 12:49:09.019 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/RecoTauTag/TauTagTools/interface to tarball
+DEBUG 2019-10-07 12:49:09.043 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/DQM/HcalCommon/interface to tarball
+DEBUG 2019-10-07 12:49:09.058 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/DQM/HcalTasks/data to tarball
+DEBUG 2019-10-07 12:49:09.059 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/DQM/HcalTasks/interface to tarball
+DEBUG 2019-10-07 12:49:09.080 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/DQMServices/Components/data to tarball
+DEBUG 2019-10-07 12:49:09.084 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/DQMServices/Components/interface to tarball
+DEBUG 2019-10-07 12:49:09.161 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/GeneratorInterface/GenFilters/interface to tarball
+DEBUG 2019-10-07 12:49:09.192 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/PhysicsTools/NanoAOD/interface to tarball
+DEBUG 2019-10-07 12:49:09.195 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/PhysicsTools/PatAlgos/interface to tarball
+DEBUG 2019-10-07 12:49:09.228 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/TauTriggerTools/TauTagAndProbe/data to tarball
+DEBUG 2019-10-07 12:49:09.236 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/TauTriggerTools/TauTagAndProbe/interface to tarball
+DEBUG 2019-10-07 12:49:09.240 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/TauTriggerTools/Common/interface to tarball
+DEBUG 2019-10-07 12:49:09.247 UTC: 	 Adding data directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/TauTriggerTools/Studies/interface to tarball
+DEBUG 2019-10-07 12:49:09.911 UTC: 	 Uploading archive /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/work-area-DY/crab_DYJetsToLL_M-50/inputs/478535c5-8784-4a1f-9bfb-df260a0e75e1default.tgz (7.986328.1 MB) to the CRAB cache. Using URI https://cmsweb.cern.ch/crabcache
+DEBUG 2019-10-07 12:49:21.549 UTC: 	 Loading required information from the environment
+DEBUG 2019-10-07 12:49:21.549 UTC: 	 Found CMSSW_10_6_3 for slc7_amd64_gcc700 with base /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3
+DEBUG 2019-10-07 12:49:21.549 UTC: 	 Making tarball in /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/work-area-DY/crab_DYJetsToLL_M-50/inputs/debugFiles.tgz
+DEBUG 2019-10-07 12:49:21.555 UTC: 	 Uploading archive /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/work-area-DY/crab_DYJetsToLL_M-50/inputs/debugFiles.tgz (2 KB) to the CRAB cache. Using URI https://cmsweb.cern.ch/crabcache
+DEBUG 2019-10-07 12:49:21.631 UTC: 	 Result uploading input files: f420ec7d5a308f2aeda81347a6a804e09d095be01fe5f501443b94af514b6068.tar.gz 
+INFO 2019-10-07 12:49:21.632 UTC: 	 Sending the request to the server
+DEBUG 2019-10-07 12:49:21.632 UTC: 	 Submitting {'maxjobruntime': 1250, 'extrajdl': [], 'ignorelocality': 0, 'savelogsflag': 0, 'useparent': 0, 'asyncdest': 'T2_IT_Legnaro', 'algoargs': 1000, 'cachefilename': 'f420ec7d5a308f2aeda81347a6a804e09d095be01fe5f501443b94af514b6068.tar.gz', 'numcores': 1, 'addoutputfiles': [], 'generator': 'pythia', 'maxmemory': 2000, 'publishdbsurl': 'https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter', 'priority': 10, 'jobsw': 'CMSSW_10_6_3', 'edmoutfiles': [], 'userfiles': [], 'primarydataset': '', 'inputdata': '/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall18wmLHEGS-102X_upgrade2018_realistic_v11-v1/GEN-SIM', 'lfn': '/store/user/mgrippo/deeptau_hlt', 'dryrun': 0, 'workflow': 'crab_DYJetsToLL_M-50', 'cacheurl': u'https://cmsweb.cern.ch/crabcache', 'nonprodsw': 0, 'tfileoutfiles': ['deepTauTuple_DY.root'], 'oneEventMode': 0, 'debugfilename': '4ebae2cbc6c3fa110790cb33fb3f31d0db2b9ce276ec1505e857d39e2493e797.tar.gz', 'saveoutput': 1, 'publication': 0, 'jobarch': 'slc7_amd64_gcc700', 'totalunits': 0, 'splitalgo': 'Automatic', 'ignoreglobalblacklist': 0, 'nonvaliddata': 0, 'dbsurl': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader', 'publishgroupname': 0, 'jobtype': 'Analysis', 'publishname2': ''} 
+DEBUG 2019-10-07 12:49:21.632 UTC: 	 Encoded submit request: maxjobruntime=1250&ignorelocality=0&savelogsflag=0&useparent=0&asyncdest=T2_IT_Legnaro&algoargs=1000&cachefilename=f420ec7d5a308f2aeda81347a6a804e09d095be01fe5f501443b94af514b6068.tar.gz&numcores=1&generator=pythia&maxmemory=2000&publishdbsurl=https%3A%2F%2Fcmsweb.cern.ch%2Fdbs%2Fprod%2Fphys03%2FDBSWriter&priority=10&jobsw=CMSSW_10_6_3&primarydataset=&inputdata=%2FDYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8%2FRunIIFall18wmLHEGS-102X_upgrade2018_realistic_v11-v1%2FGEN-SIM&lfn=%2Fstore%2Fuser%2Fmgrippo%2Fdeeptau_hlt&dryrun=0&workflow=crab_DYJetsToLL_M-50&cacheurl=https%3A%2F%2Fcmsweb.cern.ch%2Fcrabcache&nonprodsw=0&oneEventMode=0&debugfilename=4ebae2cbc6c3fa110790cb33fb3f31d0db2b9ce276ec1505e857d39e2493e797.tar.gz&saveoutput=1&publication=0&jobarch=slc7_amd64_gcc700&totalunits=0&splitalgo=Automatic&ignoreglobalblacklist=0&nonvaliddata=0&dbsurl=https%3A%2F%2Fcmsweb.cern.ch%2Fdbs%2Fprod%2Fglobal%2FDBSReader&publishgroupname=0&jobtype=Analysis&publishname2=&tfileoutfiles=deepTauTuple_DY.root
+DEBUG 2019-10-07 12:49:22.677 UTC: 	 Result: {u'result': [{u'RequestName': u'191007_124922:mgrippo_crab_DYJetsToLL_M-50'}]}
+INFO 2019-10-07 12:49:22.730 UTC: 	 Success: Your task has been delivered to the CRAB3 server.
+INFO 2019-10-07 12:49:22.730 UTC: 	 Task name: 191007_124922:mgrippo_crab_DYJetsToLL_M-50
+INFO 2019-10-07 12:49:22.730 UTC: 	 Project dir: work-area-DY/crab_DYJetsToLL_M-50
+INFO 2019-10-07 12:49:22.730 UTC: 	 Please use 'crab status -d work-area-DY/crab_DYJetsToLL_M-50' to check how the submission process proceeds.
+DEBUG 2019-10-07 12:49:22.731 UTC: 	 About to return

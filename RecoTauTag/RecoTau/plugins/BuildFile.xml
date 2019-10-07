@@ -37,5 +37,6 @@
   <use   name="MagneticField/Records"/>
   <use   name="CommonTools/BaseParticlePropagator"/>
   <use   name="PhysicsTools/TensorFlow"/>
+  <use   name="TauTriggerTools/Common"/>
   <use   name="root"/>
 </library>

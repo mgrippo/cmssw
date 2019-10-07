@@ -79,7 +79,7 @@ DeepTauBase::Output::ResultMap DeepTauBase::Output::get_value(const edm::Handle<
 DeepTauBase::DeepTauBase(const edm::ParameterSet& cfg, const OutputCollection& outputCollection,
                          const DeepTauCache* cache) :
     tausToken_(consumes<TauCollection>(cfg.getParameter<edm::InputTag>("taus"))),
-    pfcandToken_(consumes<pat::PackedCandidateCollection>(cfg.getParameter<edm::InputTag>("pfcands"))),
+    pfcandToken_(consumes<std::vector<reco::PFCandidate>>(cfg.getParameter<edm::InputTag>("pfcands"))),
     vtxToken_(consumes<reco::VertexCollection>(cfg.getParameter<edm::InputTag>("vertices"))),
     outputs_(outputCollection),
     cache_(cache)
@@ -99,7 +99,6 @@ void DeepTauBase::produce(edm::Event& event, const edm::EventSetup& es)
 {
     edm::Handle<TauCollection> taus;
     event.getByToken(tausToken_, taus);
-
     const tensorflow::Tensor& pred = getPredictions(event, es, taus);
     createOutputs(event, pred, taus);
 }
