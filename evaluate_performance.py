@@ -144,7 +144,7 @@ class PlotSetup:
 
             ax_ratio.set_yscale(self.ratio_yscale)
             ax_ratio.set_xlabel('Tau ID efficiency', fontsize=16)
-            ratio_title = 'MVA/DeepTau' if args.other_type != 'mu' else 'cut based/DeepTau'
+            ratio_title = 'Id/DeepTau' if args.other_type != 'mu' else 'cut based/DeepTau'
             ax_ratio.set_ylabel(ratio_title, fontsize=14, labelpad=self.ratio_ylable_pad)
             ax_ratio.tick_params(labelsize=10)
 
@@ -287,7 +287,7 @@ all_discriminators = {
     ],
     'jet': [
         #'byIsolationMVArun2017v2DBoldDMwLT2017raw'
-        Discriminator('MVA vs. jets (JINST 13 (2018) P10005)', 'cut_based_iso', False, False,
+        Discriminator('Cut Based Id', 'cut_based_iso', False, False,
                       'green',
                       [ DiscriminatorWP.Loose, DiscriminatorWP.Medium, DiscriminatorWP.Tight]),
         #byIsolationMVArun2017v2DBnewDMwLT2017raw
@@ -376,7 +376,7 @@ def CreateDF(file_name, filter, filter_ele, filter_mu):
     for wp in [ DiscriminatorWP.Loose, DiscriminatorWP.Medium, DiscriminatorWP.Tight ]:
         abs_col = 'tau_{}IsoAbs'.format(DiscriminatorWP.GetName(wp).lower())
         rel_col = 'tau_{}IsoRel'.format(DiscriminatorWP.GetName(wp).lower())
-        cut_result = ((df[abs_col] > 0.5) & (df[rel_col] > 0.5)).values.astype(int)
+        cut_result = ((df[abs_col] > 0.5) | (df[rel_col] > 0.5)).values.astype(int)
         cut_result_shifted = np.left_shift(cut_result, wp)
         cut_based_iso = np.bitwise_or(cut_based_iso, cut_result_shifted)
     df['cut_based_iso'] = pandas.Series(cut_based_iso, index=df.index)
@@ -389,9 +389,9 @@ def CreateDF(file_name, filter, filter_ele, filter_mu):
     return df
 
 df_taus = CreateDF(args.input_taus,True,False,False)
-print(df_taus)
-df_other = CreateDF(args.input_other,False,False,True)
-print(df_other)
+#print(df_taus)
+df_other = CreateDF(args.input_other,False,False,False)
+#print(df_other)
 df_all = df_taus.append(df_other)
 
 # apply_standard_cuts = False
@@ -433,7 +433,8 @@ df_all = df_taus.append(df_other)
 
 
 #pt_bins = [ 20, 30, 40, 50, 70, 100, 150, 200, 300, 500, 1000 ]
-pt_bins = [ 20, 100, 1000 ]
+#pt_bins = [ 20, 100, 1000 ]
+pt_bins = [20, 30, 40, 50, 70, 100, 1000 ]
 inequality_in_titles = True
 public_plots = True
 
