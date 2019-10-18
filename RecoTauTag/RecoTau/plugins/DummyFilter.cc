@@ -35,7 +35,6 @@ public:
     deepTauTuple("deep_taus", &edm::Service<TFileService>()->file(), false)
      {
          produces<bool>();
-         std::cout << "Initialized" << std::endl;
      }
 
      virtual void endJob() override
@@ -71,7 +70,7 @@ private:
 
         edm::Handle<TauDiscriminator> tightIsoRel;
         event.getByToken(tightIsoRel_inputToken, tightIsoRel);
-
+        
         edm::Handle<TauDiscriminator> deepTau_VSe;
         event.getByToken(VSe_inputToken, deepTau_VSe);
 
@@ -95,12 +94,14 @@ private:
             deepTauTuple().tau_phi = static_cast<float>(tau.polarP4().phi());
             deepTauTuple().tau_mass = static_cast<float>(tau.polarP4().mass());
 
+
             if(genParticles) {
                 const auto gen_match = analysis::gen_truth::LeptonGenMatch(tau.polarP4(), *genParticles);
                 deepTauTuple().lepton_gen_match = static_cast<int>(gen_match.match);
             } else {
                 deepTauTuple().lepton_gen_match = default_int_value;
             }
+
 
             deepTauTuple().tau_decayMode = static_cast<int>(tau.decayMode());
             deepTauTuple().tau_looseIsoAbs = static_cast<float>(looseIsoAbs->value(tau_index));

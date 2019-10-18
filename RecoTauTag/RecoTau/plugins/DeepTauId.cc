@@ -726,12 +726,13 @@ private:
     	  get(dnn::tau_dxy_pca_y) = 0;
     	  get(dnn::tau_dxy_pca_z) = 0;
 
-        const bool tau_dxy_valid = std::isnormal(leadChargedHadrCand->bestTrack()->dxy()) && leadChargedHadrCand->bestTrack()->dxy() > - 10 && std::isnormal(tau.dxyError())
+        const bool tau_dxy_valid = leadChargedHadrCand->bestTrack() != nullptr && std::isnormal(leadChargedHadrCand->bestTrack()->dxy()) && leadChargedHadrCand->bestTrack()->dxy() > - 10 && std::isnormal(tau.dxyError())
             && tau.dxyError() > 0;
         if(tau_dxy_valid){
             get(dnn::tau_dxy_valid) = tau_dxy_valid;
-            get(dnn::tau_dxy) = getValueNorm(leadChargedHadrCand->bestTrack()->dxy(), 0.0018f, 0.0085f);
-            get(dnn::tau_dxy_sig) = getValueNorm(std::abs(leadChargedHadrCand->bestTrack()->dxy())/tau.dxyError(), 2.26f, 4.191f);
+
+            get(dnn::tau_dxy) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? leadChargedHadrCand->bestTrack()->dxy() : default_value, 0.0018f, 0.0085f);
+            get(dnn::tau_dxy_sig) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? std::abs(leadChargedHadrCand->bestTrack()->dxy())/tau.dxyError() : default_value, 2.26f, 4.191f);
         }
         // const bool tau_ip3d_valid = std::isnormal(tau.ip3d()) && tau.ip3d() > - 10 && std::isnormal(tau.ip3d_error())
         //     && tau.ip3d_error() > 0;
@@ -745,12 +746,12 @@ private:
             get(dnn::tau_ip3d_sig) = 0;
         //}
         if(leadChargedHadrCand){
-            get(dnn::tau_dz) = getValueNorm(leadChargedHadrCand->bestTrack()->dz(), 0.f, 0.0190f);
+            get(dnn::tau_dz) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? leadChargedHadrCand->bestTrack()->dz() : default_value, 0.f, 0.0190f);
             const bool tau_dz_sig_valid = leadChargedHadrCand->bestTrack() != nullptr && std::isnormal(leadChargedHadrCand->bestTrack()->dz())
                 && std::isnormal(leadChargedHadrCand->dzError()) && leadChargedHadrCand->dzError() > 0;
             get(dnn::tau_dz_sig_valid) = tau_dz_sig_valid;
             const double dzError = leadChargedHadrCand->bestTrack() != nullptr ? leadChargedHadrCand->dzError() : default_value;
-            get(dnn::tau_dz_sig) = getValueNorm(std::abs(leadChargedHadrCand->bestTrack()->dz()) / dzError, 4.717f, 11.78f);
+            get(dnn::tau_dz_sig) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? std::abs(leadChargedHadrCand->bestTrack()->dz()) / dzError : default_value, 4.717f, 11.78f);
         }
         // get(dnn::tau_flightLength_x) = getValueNorm(tau.flightLength().x(), -0.0003f, 0.7362f);
         // get(dnn::tau_flightLength_y) = getValueNorm(tau.flightLength().y(), -0.0009f, 0.7354f);

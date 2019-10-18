@@ -3,7 +3,7 @@ import FWCore.ParameterSet.Config as cms
 process = cms.Process("HLTdata")
 
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('/store/data/Run2018D/ZeroBias/RAW/v1/000/320/917/00000/BAA113A0-9999-E811-831E-FA163E87BFED.root'),
+    fileNames = cms.untracked.vstring('/store/data/Run2018D/ZeroBias/RAW/v1/000/321/219/00000/2CA562E1-389F-E811-858A-FA163EE35BE6.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 process.AODEventContent = cms.PSet(
@@ -18812,7 +18812,7 @@ process.ecalLocalRecoRECO = cms.PSet(
 )
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10000)
+    input = cms.untracked.int32(-1)
 )
 
 process.options = cms.untracked.PSet(
@@ -27567,17 +27567,17 @@ process.randomEngineStateProducer = cms.EDProducer("RandomEngineStateProducer")
 
 
 process.dummyFilter = cms.EDFilter("DummyFilter",
-    VSe = cms.InputTag("deepTauProducer","VSe","HLT"),
-    VSjet = cms.InputTag("deepTauProducer","VSjet","HLT"),
-    VSmu = cms.InputTag("deepTauProducer","VSmu","HLT"),
+    VSe = cms.InputTag("deepTauProducer","VSe"),
+    VSjet = cms.InputTag("deepTauProducer","VSjet"),
+    VSmu = cms.InputTag("deepTauProducer","VSmu"),
     genParticles = cms.InputTag("genParticles"),
-    looseIsoAbs = cms.InputTag("hltHpsPFTauLooseAbsoluteChargedIsolationDiscriminator","","HLT"),
-    looseIsoRel = cms.InputTag("hltHpsPFTauLooseRelativeChargedIsolationDiscriminator","","HLT"),
-    mediumIsoAbs = cms.InputTag("hltHpsPFTauMediumAbsoluteChargedIsolationDiscriminatorReg","","HLT"),
-    mediumIsoRel = cms.InputTag("hltHpsPFTauMediumRelativeChargedIsolationDiscriminatorReg","","HLT"),
+    looseIsoAbs = cms.InputTag("hltHpsPFTauLooseAbsoluteChargedIsolationDiscriminator"),
+    looseIsoRel = cms.InputTag("hltHpsPFTauLooseRelativeChargedIsolationDiscriminator"),
+    mediumIsoAbs = cms.InputTag("hltHpsPFTauMediumAbsoluteChargedIsolationDiscriminatorReg"),
+    mediumIsoRel = cms.InputTag("hltHpsPFTauMediumRelativeChargedIsolationDiscriminatorReg"),
     taus = cms.InputTag("hltHpsPFTauProducerReg"),
-    tightIsoAbs = cms.InputTag("hltHpsPFTauTightAbsoluteChargedIsolationDiscriminatorReg","","HLT"),
-    tightIsoRel = cms.InputTag("hltHpsPFTauTightRelativeChargedIsolationDiscriminatorReg","","HLT")
+    tightIsoAbs = cms.InputTag("hltHpsPFTauTightAbsoluteChargedIsolationDiscriminatorReg"),
+    tightIsoRel = cms.InputTag("hltHpsPFTauTightRelativeChargedIsolationDiscriminatorReg")
 )
 
 

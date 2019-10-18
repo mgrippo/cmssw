@@ -21154,7 +21154,7 @@ process.histoThreshold_C3d_params = cms.PSet(
 )
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(1000)
 )
 
 process.me0DigiCommonParameters = cms.PSet(
@@ -34473,17 +34473,17 @@ process.simTwinMuxDigis = cms.EDProducer("L1TTwinMuxProducer",
 
 
 process.dummyFilter = cms.EDFilter("DummyFilter",
-    VSe = cms.InputTag("deepTauProducer","VSe","HLT"),
-    VSjet = cms.InputTag("deepTauProducer","VSjet","HLT"),
-    VSmu = cms.InputTag("deepTauProducer","VSmu","HLT"),
+    VSe = cms.InputTag("deepTauProducer","VSe"),
+    VSjet = cms.InputTag("deepTauProducer","VSjet"),
+    VSmu = cms.InputTag("deepTauProducer","VSmu"),
     genParticles = cms.InputTag("genParticles"),
-    looseIsoAbs = cms.InputTag("hltHpsPFTauLooseAbsoluteChargedIsolationDiscriminator","","HLT"),
-    looseIsoRel = cms.InputTag("hltHpsPFTauLooseRelativeChargedIsolationDiscriminator","","HLT"),
-    mediumIsoAbs = cms.InputTag("hltHpsPFTauMediumAbsoluteChargedIsolationDiscriminatorReg","","HLT"),
-    mediumIsoRel = cms.InputTag("hltHpsPFTauMediumRelativeChargedIsolationDiscriminatorReg","","HLT"),
+    looseIsoAbs = cms.InputTag("hltHpsPFTauLooseAbsoluteChargedIsolationDiscriminator"),
+    looseIsoRel = cms.InputTag("hltHpsPFTauLooseRelativeChargedIsolationDiscriminator"),
+    mediumIsoAbs = cms.InputTag("hltHpsPFTauMediumAbsoluteChargedIsolationDiscriminatorReg"),
+    mediumIsoRel = cms.InputTag("hltHpsPFTauMediumRelativeChargedIsolationDiscriminatorReg"),
     taus = cms.InputTag("hltHpsPFTauProducerReg"),
-    tightIsoAbs = cms.InputTag("hltHpsPFTauTightAbsoluteChargedIsolationDiscriminatorReg","","HLT"),
-    tightIsoRel = cms.InputTag("hltHpsPFTauTightRelativeChargedIsolationDiscriminatorReg","","HLT")
+    tightIsoAbs = cms.InputTag("hltHpsPFTauTightAbsoluteChargedIsolationDiscriminatorReg"),
+    tightIsoRel = cms.InputTag("hltHpsPFTauTightRelativeChargedIsolationDiscriminatorReg")
 )
 
 

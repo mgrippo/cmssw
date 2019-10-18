@@ -17,3 +17,39 @@ DEBUG 2019-10-07 12:18:34.005 UTC: 	 Executing :
  retcode : 0
 DEBUG 2019-10-07 12:18:34.005 UTC: 	 Proxy valid for 167:36:59 hours
 DEBUG 2019-10-07 12:18:34.006 UTC: 	 Will use CRAB Analysis plugin (i.e. will run an analysis job type).
+DEBUG 2019-10-15 16:14:13.130 UTC: 	 Executing command: 'status'
+DEBUG 2019-10-15 16:14:13.132 UTC: 	 Found CRAB cache file /afs/cern.ch/user/m/mgrippo/.crab3
+ERROR 2019-10-15 16:14:13.134 UTC: 	 Cannot find .requestcache file in CRAB project directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/work-area-DY
+ERROR 2019-10-15 16:14:13.134 UTC: 	 Caught exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1909/bin/crab", line 160, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1909/bin/crab", line 145, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1909/lib/python2.7/site-packages/CRABClient/Commands/status.py", line 40, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1909/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 268, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1909/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 590, in validateOptions
+    self.loadLocalCache()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1909/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 452, in loadLocalCache
+    raise ex
+CachefileNotFoundException: Cannot find .requestcache file in CRAB project directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/work-area-DY
+DEBUG 2019-10-17 07:24:33.591 UTC: 	 Executing command: 'status'
+DEBUG 2019-10-17 07:24:33.591 UTC: 	 Found CRAB cache file /afs/cern.ch/user/m/mgrippo/.crab3
+ERROR 2019-10-17 07:24:33.611 UTC: 	 Cannot find .requestcache file in CRAB project directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/work-area-ZeroBias
+ERROR 2019-10-17 07:24:33.611 UTC: 	 Caught exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1909/bin/crab", line 160, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1909/bin/crab", line 145, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1909/lib/python2.7/site-packages/CRABClient/Commands/status.py", line 40, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1909/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 268, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1909/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 590, in validateOptions
+    self.loadLocalCache()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1909/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 452, in loadLocalCache
+    raise ex
+CachefileNotFoundException: Cannot find .requestcache file in CRAB project directory /afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/work-area-ZeroBias

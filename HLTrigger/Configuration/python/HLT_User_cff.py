@@ -13867,16 +13867,29 @@ fragment.hltHpsPFTauTightRelativeChargedIsolationDiscriminatorReg = cms.EDProduc
       )
     )
 )
+# fragment.dummyFilter = cms.EDFilter( "DummyFilter",
+#     VSe = cms.InputTag('deepTauProducer','VSe','HLT'),
+#     VSmu = cms.InputTag('deepTauProducer','VSmu','HLT'),
+#     VSjet = cms.InputTag('deepTauProducer','VSjet','HLT'),
+#     looseIsoAbs = cms.InputTag('hltHpsPFTauLooseAbsoluteChargedIsolationDiscriminator','','HLT'),
+#     looseIsoRel = cms.InputTag('hltHpsPFTauLooseRelativeChargedIsolationDiscriminator','','HLT'),
+#     mediumIsoAbs = cms.InputTag('hltHpsPFTauMediumAbsoluteChargedIsolationDiscriminatorReg','','HLT'),
+#     mediumIsoRel = cms.InputTag('hltHpsPFTauMediumRelativeChargedIsolationDiscriminatorReg','','HLT'),
+#     tightIsoAbs = cms.InputTag('hltHpsPFTauTightAbsoluteChargedIsolationDiscriminatorReg','','HLT'),
+#     tightIsoRel = cms.InputTag('hltHpsPFTauTightRelativeChargedIsolationDiscriminatorReg','','HLT'),
+#     genParticles = cms.InputTag('genParticles'),
+#     taus = cms.InputTag('hltHpsPFTauProducerReg')
+# )
 fragment.dummyFilter = cms.EDFilter( "DummyFilter",
-    VSe = cms.InputTag('deepTauProducer','VSe','HLT'),
-    VSmu = cms.InputTag('deepTauProducer','VSmu','HLT'),
-    VSjet = cms.InputTag('deepTauProducer','VSjet','HLT'),
-    looseIsoAbs = cms.InputTag('hltHpsPFTauLooseAbsoluteChargedIsolationDiscriminator','','HLT'),
-    looseIsoRel = cms.InputTag('hltHpsPFTauLooseRelativeChargedIsolationDiscriminator','','HLT'),
-    mediumIsoAbs = cms.InputTag('hltHpsPFTauMediumAbsoluteChargedIsolationDiscriminatorReg','','HLT'),
-    mediumIsoRel = cms.InputTag('hltHpsPFTauMediumRelativeChargedIsolationDiscriminatorReg','','HLT'),
-    tightIsoAbs = cms.InputTag('hltHpsPFTauTightAbsoluteChargedIsolationDiscriminatorReg','','HLT'),
-    tightIsoRel = cms.InputTag('hltHpsPFTauTightRelativeChargedIsolationDiscriminatorReg','','HLT'),
+    VSe = cms.InputTag('deepTauProducer','VSe'),
+    VSmu = cms.InputTag('deepTauProducer','VSmu'),
+    VSjet = cms.InputTag('deepTauProducer','VSjet'),
+    looseIsoAbs = cms.InputTag('hltHpsPFTauLooseAbsoluteChargedIsolationDiscriminator'),
+    looseIsoRel = cms.InputTag('hltHpsPFTauLooseRelativeChargedIsolationDiscriminator'),
+    mediumIsoAbs = cms.InputTag('hltHpsPFTauMediumAbsoluteChargedIsolationDiscriminatorReg'),
+    mediumIsoRel = cms.InputTag('hltHpsPFTauMediumRelativeChargedIsolationDiscriminatorReg'),
+    tightIsoAbs = cms.InputTag('hltHpsPFTauTightAbsoluteChargedIsolationDiscriminatorReg'),
+    tightIsoRel = cms.InputTag('hltHpsPFTauTightRelativeChargedIsolationDiscriminatorReg'),
     genParticles = cms.InputTag('genParticles'),
     taus = cms.InputTag('hltHpsPFTauProducerReg')
 )
