@@ -71,7 +71,8 @@ public:
     using TauRef = edm::Ref<TauCollection>;
     using TauRefProd = edm::RefProd<TauCollection>;
     using ElectronCollection = pat::ElectronCollection;
-    using MuonCollection = pat::MuonCollection;
+    // using MuonCollection = pat::MuonCollection;
+    using MuonCollection = reco::MuonCollection;
     using LorentzVectorXYZ = ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>>;
     using Cutter = TauWPThreshold;
     using CutterPtr = std::unique_ptr<Cutter>;

@@ -8,6 +8,7 @@
 
 #include "RecoTauTag/RecoTau/interface/DeepTauBase.h"
 #include "FWCore/Utilities/interface/isFinite.h"
+#include "DataFormats/MuonReco/interface/MuonSelectors.h"
 
 namespace deep_tau {
     constexpr int NumberOfOutputs = 4;
@@ -265,7 +266,7 @@ CellObjectType GetCellObjectType(const Object&);
 template<>
 CellObjectType GetCellObjectType(const pat::Electron&) { return CellObjectType::Electron; }
 template<>
-CellObjectType GetCellObjectType(const pat::Muon&) { return CellObjectType::Muon; }
+CellObjectType GetCellObjectType(const reco::Muon&) { return CellObjectType::Muon; }
 
 template<>
 CellObjectType GetCellObjectType(const reco::PFCandidate& cand)
@@ -402,8 +403,11 @@ public:
     explicit DeepTauId(const edm::ParameterSet& cfg, const deep_tau::DeepTauCache* cache) :
         DeepTauBase(cfg, GetOutputs(), cache),
         //electrons_token_(consumes<ElectronCollection>(cfg.getParameter<edm::InputTag>("electrons"))),
-        //muons_token_(consumes<MuonCollection>(cfg.getParameter<edm::InputTag>("muons"))),
+        muons_token_(consumes<MuonCollection>(cfg.getParameter<edm::InputTag>("muons"))),
         rho_token_(consumes<double>(cfg.getParameter<edm::InputTag>("rho"))),
+        chargedIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("chargedIsoPtSum"))),
+        neutralIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("neutralIsoPtSum"))),
+        puCorrPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("puCorrPtSum"))),
         version(cfg.getParameter<unsigned>("version")),
         debug_level(cfg.getParameter<int>("debug_level")),
 	disable_dxy_pca_(cfg.getParameter<bool>("disable_dxy_pca"))
@@ -532,9 +536,8 @@ private:
         //event.getByToken(electrons_token_, electrons);
         ElectronCollection electrons; //in the future it should be reco::
 
-        //edm::Handle<pat::MuonCollection> muons;
-        //event.getByToken(muons_token_, muons);
-        MuonCollection muons; //in the future it should be reco::
+        edm::Handle<MuonCollection> muons;
+        event.getByToken(muons_token_, muons);
 
         //edm::Handle<pat::PackedCandidateCollection> pfCands;
         edm::Handle<std::vector<reco::PFCandidate>> pfCands;
@@ -546,12 +549,21 @@ private:
         edm::Handle<double> rho;
         event.getByToken(rho_token_, rho);
 
+        edm::Handle<TauDiscriminator> chargedIsoPtSum;
+        event.getByToken(chargedIsoPtSum_inputToken, chargedIsoPtSum);
+
+        edm::Handle<TauDiscriminator> neutralIsoPtSum;
+        event.getByToken(neutralIsoPtSum_inputToken, neutralIsoPtSum);
+
+        edm::Handle<TauDiscriminator> puCorrPtSum;
+        event.getByToken(puCorrPtSum_inputToken, puCorrPtSum);
+
         tensorflow::Tensor predictions(tensorflow::DT_FLOAT, { static_cast<int>(taus->size()),
                                        deep_tau::NumberOfOutputs});
         for(size_t tau_index = 0; tau_index < taus->size(); ++tau_index) {
             std::vector<tensorflow::Tensor> pred_vector;
             if(version == 2)
-                getPredictionsV2(taus->at(tau_index), electrons, muons, *pfCands, vertices->at(0), 0, pred_vector);
+                getPredictionsV2(taus->at(tau_index), tau_index, electrons, *muons, *pfCands, vertices->at(0), *rho, pred_vector, *chargedIsoPtSum, *neutralIsoPtSum, *puCorrPtSum);
             else
                 throw cms::Exception("DeepTauId") << "version " << version << " is not supported.";
             for(int k = 0; k < deep_tau::NumberOfOutputs; ++k) {
@@ -566,9 +578,11 @@ private:
     }
 
 
-    void getPredictionsV2(const TauType& tau, const ElectronCollection& electrons,
+    void getPredictionsV2(const TauType& tau, size_t tau_index, const ElectronCollection& electrons,
                           const MuonCollection& muons, const std::vector<reco::PFCandidate>& pfCands,
-                          const reco::Vertex& pv, double rho, std::vector<tensorflow::Tensor>& pred_vector)
+                          const reco::Vertex& pv, double rho, std::vector<tensorflow::Tensor>& pred_vector,
+                          const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& neutralIsoPtSum,
+                          const TauDiscriminator& puCorrPtSum)
     {
         CellGrid inner_grid(dnn_inputs_2017_v2::number_of_inner_cell, dnn_inputs_2017_v2::number_of_inner_cell,
                             0.02, 0.02);
@@ -578,7 +592,7 @@ private:
         fillGrids(tau, muons, inner_grid, outer_grid);
         fillGrids(tau, pfCands, inner_grid, outer_grid);
 
-        createTauBlockInputs(tau, pv, rho);
+        createTauBlockInputs(tau, tau_index, pv, rho, chargedIsoPtSum, neutralIsoPtSum, puCorrPtSum);
         createConvFeatures(tau, pv, rho, electrons, muons, pfCands, inner_grid, true);
         createConvFeatures(tau, pv, rho, electrons, muons, pfCands, outer_grid, false);
 
@@ -675,7 +689,8 @@ private:
             convTensor.tensor<float, 4>()(0, eta_index, phi_index, n) = features.tensor<float, 4>()(0, 0, 0, n);
     }
 
-    void createTauBlockInputs(const TauType& tau, const reco::Vertex& pv, double rho)
+    void createTauBlockInputs(const TauType& tau, size_t tau_index, const reco::Vertex& pv, double rho, const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& neutralIsoPtSum,
+    const TauDiscriminator& puCorrPtSum)
     {
         namespace dnn = dnn_inputs_2017_v2::TauBlockInputs;
 
@@ -687,7 +702,6 @@ private:
         auto leadChargedHadrCand = dynamic_cast<const reco::PFCandidate*>(tau.leadChargedHadrCand().get());
 
         get(dnn::rho) = getValueNorm(rho, 21.49f, 9.713f);
-        //get(dnn::rho) = 0;
         get(dnn::tau_pt) =  getValueLinear(tau.polarP4().pt(), 20.f, 1000.f, true);
         get(dnn::tau_eta) = getValueLinear(tau.polarP4().eta(), -2.3f, 2.3f, false);
         get(dnn::tau_phi) = getValueLinear(tau.polarP4().phi(), -pi, pi, false);
@@ -696,27 +710,26 @@ private:
         get(dnn::tau_charge) = getValue(tau.charge());
         get(dnn::tau_n_charged_prongs) = getValueLinear(tau.decayMode() / 5 + 1, 1, 3, true);
         get(dnn::tau_n_neutral_prongs) = getValueLinear(tau.decayMode() % 5, 0, 2, true);
-        // get(dnn::chargedIsoPtSum) = getValueNorm(tau.tauID("chargedIsoPtSum"), 47.78f, 123.5f);
+
         // get(dnn::chargedIsoPtSumdR03_over_dR05) = getValue(tau.tauID("chargedIsoPtSumdR03") / tau.tauID("chargedIsoPtSum"));
         // get(dnn::footprintCorrection) = getValueNorm(tau.tauID("footprintCorrectiondR03"), 9.029f, 26.42f);
-        // get(dnn::neutralIsoPtSum) = getValueNorm(tau.tauID("neutralIsoPtSum"), 57.59f, 155.3f);
+
         // get(dnn::neutralIsoPtSumWeight_over_neutralIsoPtSum) =
         //     getValue(tau.tauID("neutralIsoPtSumWeight") / tau.tauID("neutralIsoPtSum"));
         // get(dnn::neutralIsoPtSumWeightdR03_over_neutralIsoPtSum) =
         //     getValue(tau.tauID("neutralIsoPtSumWeightdR03") / tau.tauID("neutralIsoPtSum"));
         // get(dnn::neutralIsoPtSumdR03_over_dR05) = getValue(tau.tauID("neutralIsoPtSumdR03") / tau.tauID("neutralIsoPtSum"));
         // get(dnn::photonPtSumOutsideSignalCone) = getValueNorm(tau.tauID("photonPtSumOutsideSignalConedR03"), 1.731f, 6.846f);
-        // get(dnn::puCorrPtSum) = getValueNorm(tau.tauID("puCorrPtSum"), 22.38f, 16.34f);
         //set temporary to zero
-        get(dnn::chargedIsoPtSum) = 0;
+        get(dnn::chargedIsoPtSum) = getValueNorm(chargedIsoPtSum.value(tau_index), 47.78f, 123.5f);
         get(dnn::chargedIsoPtSumdR03_over_dR05) = 0;
         get(dnn::footprintCorrection) = 0;
-        get(dnn::neutralIsoPtSum) = 0;
+        get(dnn::neutralIsoPtSum) = getValueNorm(neutralIsoPtSum.value(tau_index), 57.59f, 155.3f);
         get(dnn::neutralIsoPtSumWeight_over_neutralIsoPtSum) = 0;
         get(dnn::neutralIsoPtSumWeightdR03_over_neutralIsoPtSum) = 0;
         get(dnn::neutralIsoPtSumdR03_over_dR05) = 0;
         get(dnn::photonPtSumOutsideSignalCone) = 0;
-        get(dnn::puCorrPtSum) = 0;
+        get(dnn::puCorrPtSum) = getValueNorm(puCorrPtSum.value(tau_index), 22.38f, 16.34f);
 	// The global PCA coordinates were used as inputs during the NN training, but it was decided to disable
 	// them for the inference, because modeling of dxy_PCA in MC poorly describes the data, and x and y coordinates
 	// in data results outside of the expected 5 std. dev. input validity range. On the other hand,
@@ -1074,20 +1087,32 @@ private:
             get(dnn::muon_dxy_sig) = getValueNorm(std::abs(muons.at(index_muon).bestTrack()->dxy()) /
                 muons.at(index_muon).dxyError(), 8.98f, 71.17f);
 
-            const bool normalizedChi2_valid = muons.at(index_muon).globalTrack().isNonnull() && muons.at(index_muon).normChi2() >= 0;
+            const bool normalizedChi2_valid = muons.at(index_muon).bestTrack()->outerOk() && muons.at(index_muon).bestTrack()->normalizedChi2() >= 0;
             if(normalizedChi2_valid){
                 get(dnn::muon_normalizedChi2_valid) = normalizedChi2_valid;
-                get(dnn::muon_normalizedChi2) = getValueNorm(muons.at(index_muon).normChi2(), 21.52f, 265.8f);
-                if(muons.at(index_muon).innerTrack().isNonnull())
-                    get(dnn::muon_numberOfValidHits) = getValueNorm(muons.at(index_muon).numberOfValidHits(), 21.84f, 10.59f);
+                get(dnn::muon_normalizedChi2) = getValueNorm(muons.at(index_muon).bestTrack()->normalizedChi2(), 21.52f, 265.8f);
+                if(muons.at(index_muon).bestTrack()->innerOk())
+                    get(dnn::muon_numberOfValidHits) = getValueNorm(muons.at(index_muon).bestTrack()->numberOfValidHits(), 21.84f, 10.59f);
             }
-            get(dnn::muon_segmentCompatibility) = getValue(muons.at(index_muon).segmentCompatibility());
+            double segmentCompatibility = muon::segmentCompatibility(muons.at(index_muon),reco::Muon::SegmentAndTrackArbitration);
+            get(dnn::muon_segmentCompatibility) = getValue(segmentCompatibility);
             get(dnn::muon_caloCompatibility) = getValue(muons.at(index_muon).caloCompatibility());
 
-            const bool pfEcalEnergy_valid = muons.at(index_muon).pfEcalEnergy() >= 0;
+            bool pfEcalEnergy_valid = false;
+            double pfEcalEnergy = 0.0;
+            const auto& muon = muons.at(index_muon);
+            for (const reco::PFCandidate& pfcand : pfCands) {
+              if (pfcand.muonRef().isNonnull()) {
+                if(&muon == &(*pfcand.muonRef())){
+                    pfEcalEnergy_valid = pfcand.ecalEnergy() >= 0;
+                    pfEcalEnergy = pfcand.ecalEnergy();
+                }
+              }
+            }
+
             if(pfEcalEnergy_valid){
                 get(dnn::muon_pfEcalEnergy_valid) = pfEcalEnergy_valid;
-                get(dnn::muon_rel_pfEcalEnergy) = getValueNorm(muons.at(index_muon).pfEcalEnergy() /
+                get(dnn::muon_rel_pfEcalEnergy) = getValueNorm(pfEcalEnergy /
                     muons.at(index_muon).polarP4().pt(), 0.2273f, 0.4865f);
             }
 
@@ -1369,8 +1394,11 @@ private:
 
 private:
     //edm::EDGetTokenT<ElectronCollection> electrons_token_;
-    //edm::EDGetTokenT<MuonCollection> muons_token_;
+    edm::EDGetTokenT<MuonCollection> muons_token_;
     edm::EDGetTokenT<double> rho_token_;
+    edm::EDGetTokenT<TauDiscriminator> chargedIsoPtSum_inputToken;
+    edm::EDGetTokenT<TauDiscriminator> neutralIsoPtSum_inputToken;
+    edm::EDGetTokenT<TauDiscriminator> puCorrPtSum_inputToken;
     std::string input_layer_, output_layer_;
     const unsigned version;
     const int debug_level;
