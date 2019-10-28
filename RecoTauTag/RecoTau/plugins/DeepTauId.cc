@@ -152,7 +152,7 @@ struct MuonHitMatchV2 {
         return static_cast<size_t>(station - 1);
     }
 
-    MuonHitMatchV2(const pat::Muon& muon)
+    MuonHitMatchV2(const reco::Muon& muon)
     {
         for(int subdet : consideredSubdets()) {
             n_matches[subdet].fill(0);
@@ -163,7 +163,7 @@ struct MuonHitMatchV2 {
         countHits(muon, n_hits);
     }
 
-    void countMatches(const pat::Muon& muon, CountMap& n_matches)
+    void countMatches(const reco::Muon& muon, CountMap& n_matches)
     {
         for(const auto& segment : muon.matches()) {
             if(segment.segmentMatches.empty() && segment.rpcMatches.empty()) continue;
@@ -174,7 +174,7 @@ struct MuonHitMatchV2 {
         }
     }
 
-    void countHits(const pat::Muon& muon, CountMap& n_hits)
+    void countHits(const reco::Muon& muon, CountMap& n_hits)
     {
         if(muon.outerTrack().isNonnull()) {
             const auto& hit_pattern = muon.outerTrack()->hitPattern();
@@ -264,7 +264,7 @@ enum class CellObjectType { PfCand_electron, PfCand_muon, PfCand_chargedHadron, 
 template<typename Object>
 CellObjectType GetCellObjectType(const Object&);
 template<>
-CellObjectType GetCellObjectType(const pat::Electron&) { return CellObjectType::Electron; }
+CellObjectType GetCellObjectType(const reco::Electron&) { return CellObjectType::Electron; }
 template<>
 CellObjectType GetCellObjectType(const reco::Muon&) { return CellObjectType::Muon; }
 
@@ -376,7 +376,10 @@ public:
         desc.add<edm::InputTag>("taus", edm::InputTag("slimmedTaus"));
         desc.add<edm::InputTag>("pfcands", edm::InputTag("packedPFCandidates"));
         desc.add<edm::InputTag>("vertices", edm::InputTag("offlineSlimmedPrimaryVertices"));
-        desc.add<edm::InputTag>("rho", edm::InputTag("fixedGridRhoAll"));
+        desc.add<edm::InputTag>("rho", edm::InputTag("hltFixedGridRhoFastjetAll"));
+        // desc.add<edm::InputTag>("chargedIsoPtSum", edm::InputTag("chargedIsoPtSum"));
+        // desc.add<edm::InputTag>("neutralIsoPtSum", edm::InputTag("neutralIsoPtSum"));
+        // desc.add<edm::InputTag>("puCorrPtSum", edm::InputTag("puCorrPtSum"));
         desc.add<std::vector<std::string>>("graph_file", {"RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6.pb"});
         desc.add<bool>("mem_mapped", false);
         desc.add<unsigned>("version", 2);
@@ -402,12 +405,12 @@ public:
 public:
     explicit DeepTauId(const edm::ParameterSet& cfg, const deep_tau::DeepTauCache* cache) :
         DeepTauBase(cfg, GetOutputs(), cache),
-        //electrons_token_(consumes<ElectronCollection>(cfg.getParameter<edm::InputTag>("electrons"))),
+        electrons_token_(consumes<ElectronCollection>(cfg.getParameter<edm::InputTag>("electrons"))),
         muons_token_(consumes<MuonCollection>(cfg.getParameter<edm::InputTag>("muons"))),
         rho_token_(consumes<double>(cfg.getParameter<edm::InputTag>("rho"))),
-        chargedIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("chargedIsoPtSum"))),
-        neutralIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("neutralIsoPtSum"))),
-        puCorrPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("puCorrPtSum"))),
+        // chargedIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("chargedIsoPtSum"))),
+        // neutralIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("neutralIsoPtSum"))),
+        // puCorrPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("puCorrPtSum"))),
         version(cfg.getParameter<unsigned>("version")),
         debug_level(cfg.getParameter<int>("debug_level")),
 	disable_dxy_pca_(cfg.getParameter<bool>("disable_dxy_pca"))
@@ -486,7 +489,7 @@ private:
         return std::clamp(norm_value, -n_sigmas_max, n_sigmas_max);
     }
 
-    static bool calculateElectronClusterVarsV2(const pat::Electron& ele, float& cc_ele_energy, float& cc_gamma_energy,
+    static bool calculateElectronClusterVarsV2(const reco::Electron& ele, float& cc_ele_energy, float& cc_gamma_energy,
                                              int& cc_n_gamma)
     {
         cc_ele_energy = cc_gamma_energy = 0;
@@ -532,9 +535,8 @@ private:
     tensorflow::Tensor getPredictions(edm::Event& event, const edm::EventSetup& es,
                                       edm::Handle<TauCollection> taus) override
     {
-        //edm::Handle<pat::ElectronCollection> electrons;
-        //event.getByToken(electrons_token_, electrons);
-        ElectronCollection electrons; //in the future it should be reco::
+        edm::Handle<ElectronCollection> electrons;
+        event.getByToken(electrons_token_, electrons);
 
         edm::Handle<MuonCollection> muons;
         event.getByToken(muons_token_, muons);
@@ -549,21 +551,22 @@ private:
         edm::Handle<double> rho;
         event.getByToken(rho_token_, rho);
 
-        edm::Handle<TauDiscriminator> chargedIsoPtSum;
-        event.getByToken(chargedIsoPtSum_inputToken, chargedIsoPtSum);
-
-        edm::Handle<TauDiscriminator> neutralIsoPtSum;
-        event.getByToken(neutralIsoPtSum_inputToken, neutralIsoPtSum);
-
-        edm::Handle<TauDiscriminator> puCorrPtSum;
-        event.getByToken(puCorrPtSum_inputToken, puCorrPtSum);
+        // edm::Handle<TauDiscriminator> chargedIsoPtSum;
+        // event.getByToken(chargedIsoPtSum_inputToken, chargedIsoPtSum);
+        //
+        // edm::Handle<TauDiscriminator> neutralIsoPtSum;
+        // event.getByToken(neutralIsoPtSum_inputToken, neutralIsoPtSum);
+        //
+        // edm::Handle<TauDiscriminator> puCorrPtSum;
+        // event.getByToken(puCorrPtSum_inputToken, puCorrPtSum);
 
         tensorflow::Tensor predictions(tensorflow::DT_FLOAT, { static_cast<int>(taus->size()),
                                        deep_tau::NumberOfOutputs});
         for(size_t tau_index = 0; tau_index < taus->size(); ++tau_index) {
             std::vector<tensorflow::Tensor> pred_vector;
             if(version == 2)
-                getPredictionsV2(taus->at(tau_index), tau_index, electrons, *muons, *pfCands, vertices->at(0), *rho, pred_vector, *chargedIsoPtSum, *neutralIsoPtSum, *puCorrPtSum);
+                //getPredictionsV2(taus->at(tau_index), tau_index, *electrons, *muons, *pfCands, vertices->at(0), *rho, pred_vector, *chargedIsoPtSum, *neutralIsoPtSum, *puCorrPtSum);
+                getPredictionsV2(taus->at(tau_index), tau_index, *electrons, *muons, *pfCands, vertices->at(0), *rho, pred_vector);
             else
                 throw cms::Exception("DeepTauId") << "version " << version << " is not supported.";
             for(int k = 0; k < deep_tau::NumberOfOutputs; ++k) {
@@ -580,9 +583,9 @@ private:
 
     void getPredictionsV2(const TauType& tau, size_t tau_index, const ElectronCollection& electrons,
                           const MuonCollection& muons, const std::vector<reco::PFCandidate>& pfCands,
-                          const reco::Vertex& pv, double rho, std::vector<tensorflow::Tensor>& pred_vector,
-                          const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& neutralIsoPtSum,
-                          const TauDiscriminator& puCorrPtSum)
+                          const reco::Vertex& pv, double rho, std::vector<tensorflow::Tensor>& pred_vector)
+                          // const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& neutralIsoPtSum,
+                          // const TauDiscriminator& puCorrPtSum)
     {
         CellGrid inner_grid(dnn_inputs_2017_v2::number_of_inner_cell, dnn_inputs_2017_v2::number_of_inner_cell,
                             0.02, 0.02);
@@ -592,7 +595,8 @@ private:
         fillGrids(tau, muons, inner_grid, outer_grid);
         fillGrids(tau, pfCands, inner_grid, outer_grid);
 
-        createTauBlockInputs(tau, tau_index, pv, rho, chargedIsoPtSum, neutralIsoPtSum, puCorrPtSum);
+        //createTauBlockInputs(tau, tau_index, pv, rho, chargedIsoPtSum, neutralIsoPtSum, puCorrPtSum);
+        createTauBlockInputs(tau, tau_index, pv, rho);
         createConvFeatures(tau, pv, rho, electrons, muons, pfCands, inner_grid, true);
         createConvFeatures(tau, pv, rho, electrons, muons, pfCands, outer_grid, false);
 
@@ -689,8 +693,9 @@ private:
             convTensor.tensor<float, 4>()(0, eta_index, phi_index, n) = features.tensor<float, 4>()(0, 0, 0, n);
     }
 
-    void createTauBlockInputs(const TauType& tau, size_t tau_index, const reco::Vertex& pv, double rho, const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& neutralIsoPtSum,
-    const TauDiscriminator& puCorrPtSum)
+    void createTauBlockInputs(const TauType& tau, size_t tau_index, const reco::Vertex& pv, double rho)
+    //     const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& neutralIsoPtSum,
+    // const TauDiscriminator& puCorrPtSum)
     {
         namespace dnn = dnn_inputs_2017_v2::TauBlockInputs;
 
@@ -721,15 +726,20 @@ private:
         // get(dnn::neutralIsoPtSumdR03_over_dR05) = getValue(tau.tauID("neutralIsoPtSumdR03") / tau.tauID("neutralIsoPtSum"));
         // get(dnn::photonPtSumOutsideSignalCone) = getValueNorm(tau.tauID("photonPtSumOutsideSignalConedR03"), 1.731f, 6.846f);
         //set temporary to zero
-        get(dnn::chargedIsoPtSum) = getValueNorm(chargedIsoPtSum.value(tau_index), 47.78f, 123.5f);
+        //all params here: https://github.com/cms-sw/cmssw/blob/1d43ce3ab10966880bbac407c8d944fc7e3add42/PhysicsTools/PatAlgos/python/producersLayer1/tauProducer_cfi.py
+        //https://github.com/cms-sw/cmssw/blob/808a7f65d11ee25b76ec246b2baba00fad79fbaa/RecoTauTag/Configuration/python/HPSPFTaus_cff.py#L454 ---so??
+        //get(dnn::chargedIsoPtSum) = getValueNorm(chargedIsoPtSum.value(tau_index), 47.78f, 123.5f);
+        get(dnn::chargedIsoPtSum) = 0;
         get(dnn::chargedIsoPtSumdR03_over_dR05) = 0;
         get(dnn::footprintCorrection) = 0;
-        get(dnn::neutralIsoPtSum) = getValueNorm(neutralIsoPtSum.value(tau_index), 57.59f, 155.3f);
+        get(dnn::neutralIsoPtSum) = 0;
+        //getValueNorm(neutralIsoPtSum.value(tau_index), 57.59f, 155.3f);
         get(dnn::neutralIsoPtSumWeight_over_neutralIsoPtSum) = 0;
         get(dnn::neutralIsoPtSumWeightdR03_over_neutralIsoPtSum) = 0;
         get(dnn::neutralIsoPtSumdR03_over_dR05) = 0;
         get(dnn::photonPtSumOutsideSignalCone) = 0;
-        get(dnn::puCorrPtSum) = getValueNorm(puCorrPtSum.value(tau_index), 22.38f, 16.34f);
+        get(dnn::puCorrPtSum) = 0;
+        //getValueNorm(puCorrPtSum.value(tau_index), 22.38f, 16.34f);
 	// The global PCA coordinates were used as inputs during the NN training, but it was decided to disable
 	// them for the inference, because modeling of dxy_PCA in MC poorly describes the data, and x and y coordinates
 	// in data results outside of the expected 5 std. dev. input validity range. On the other hand,
@@ -750,6 +760,7 @@ private:
         // const bool tau_ip3d_valid = std::isnormal(tau.ip3d()) && tau.ip3d() > - 10 && std::isnormal(tau.ip3d_error())
         //     && tau.ip3d_error() > 0;
         const bool tau_ip3d_valid = false;
+        //https://github.com/cms-sw/cmssw/blob/2ba5d421e10379d81760a899532b2c991b89c82c/DataFormats/TauReco/interface/PFTauTransverseImpactParameter.h
         //if(tau_ip3d_valid){
             // get(dnn::tau_ip3d_valid) = tau_ip3d_valid;
             // get(dnn::tau_ip3d) = getValueNorm(tau.ip3d(), 0.0026f, 0.0114f);
@@ -821,182 +832,182 @@ private:
         const bool valid_index_pf_gamma = cell_map.count(CellObjectType::PfCand_gamma);
         const bool valid_index_ele = cell_map.count(CellObjectType::Electron);
 
-        if(!cell_map.empty()){
-            get(dnn::rho) = getValueNorm(rho, 21.49f, 9.713f);
-            //get(dnn::rho) = 0;
-            get(dnn::tau_pt) =  getValueLinear(tau.polarP4().pt(), 20.f, 1000.f, true);
-            get(dnn::tau_eta) = getValueLinear(tau.polarP4().eta(), -2.3f, 2.3f, false);
-            get(dnn::tau_inside_ecal_crack) = getValue(isInEcalCrack(tau.polarP4().eta()));
-        }
-        if(valid_index_pf_ele){
-            size_t index_pf_ele = cell_map.at(CellObjectType::PfCand_electron);
-
-            get(dnn::pfCand_ele_valid) = valid_index_pf_ele;
-            get(dnn::pfCand_ele_rel_pt) = getValueNorm(pfCands.at(index_pf_ele).polarP4().pt() / tau.polarP4().pt(),
-                is_inner ? 0.9792f : 0.304f, is_inner ? 0.5383f : 1.845f);
-            get(dnn::pfCand_ele_deta) = getValueLinear(pfCands.at(index_pf_ele).polarP4().eta() - tau.polarP4().eta(),
-                is_inner ? -0.1f : -0.5f, is_inner ? 0.1f : 0.5f, false);
-            get(dnn::pfCand_ele_dphi) = getValueLinear(dPhi(tau.polarP4(), pfCands.at(index_pf_ele).polarP4()),
-                is_inner ? -0.1f : -0.5f, is_inner ? 0.1f : 0.5f, false);
-            //get(dnn::pfCand_ele_pvAssociationQuality) = getValueLinear<int>(pfCands.at(index_pf_ele).pvAssociationQuality(), 0, 7, true);
-            get(dnn::pfCand_ele_pvAssociationQuality) = 0;
-            //get(dnn::pfCand_ele_puppiWeight) = getValue(pfCands.at(index_pf_ele).puppiWeight());
-            get(dnn::pfCand_ele_puppiWeight) = 0;
-            get(dnn::pfCand_ele_charge) = getValue(pfCands.at(index_pf_ele).charge());
-            get(dnn::pfCand_ele_lostInnerHits) = pfCands.at(index_pf_ele).bestTrack() != nullptr ? getValue<int>(pfCands.at(index_pf_ele).bestTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS)) : 0;
-            get(dnn::pfCand_ele_numberOfPixelHits) = pfCands.at(index_pf_ele).bestTrack() != nullptr ? getValueLinear(pfCands.at(index_pf_ele).bestTrack()->hitPattern().numberOfValidPixelHits(), 0, 10, true) : 0;
-            get(dnn::pfCand_ele_vertex_dx) = getValueNorm(pfCands.at(index_pf_ele).vertex().x() - pv.position().x(), 0.f, 0.1221f);
-            get(dnn::pfCand_ele_vertex_dy) = getValueNorm(pfCands.at(index_pf_ele).vertex().y() - pv.position().y(), 0.f, 0.1226f);
-            get(dnn::pfCand_ele_vertex_dz) = getValueNorm(pfCands.at(index_pf_ele).vertex().z() - pv.position().z(), 0.001f, 1.024f);
-            // get(dnn::pfCand_ele_vertex_dx_tauFL) = getValueNorm(pfCands.at(index_pf_ele).vertex().x() -
-            //     pv.position().x() - tau.flightLength().x(), 0.f, 0.3411f);
-            // get(dnn::pfCand_ele_vertex_dy_tauFL) = getValueNorm(pfCands.at(index_pf_ele).vertex().y() -
-            //     pv.position().y() - tau.flightLength().y(), 0.0003f, 0.3385f);
-            // get(dnn::pfCand_ele_vertex_dz_tauFL) = getValueNorm(pfCands.at(index_pf_ele).vertex().z() -
-            //     pv.position().z() - tau.flightLength().z(), 0.f, 1.307f);
-            //set temporary to zero
-            get(dnn::pfCand_ele_vertex_dx_tauFL) = 0;
-            get(dnn::pfCand_ele_vertex_dy_tauFL) = 0;
-            get(dnn::pfCand_ele_vertex_dz_tauFL) = 0;
-
-            const bool hasTrackDetails = pfCands.at(index_pf_ele).bestTrack() != nullptr;
-            if(hasTrackDetails){
-                get(dnn::pfCand_ele_hasTrackDetails) = hasTrackDetails;
-                get(dnn::pfCand_ele_dxy) = getValueNorm(pfCands.at(index_pf_ele).bestTrack()->dxy(), 0.f, 0.171f);
-                get(dnn::pfCand_ele_dxy_sig) = getValueNorm(std::abs(pfCands.at(index_pf_ele).bestTrack()->dxy()) /
-                    pfCands.at(index_pf_ele).dxyError(), 1.634f, 6.45f);
-                get(dnn::pfCand_ele_dz) =  getValueNorm(pfCands.at(index_pf_ele).bestTrack()->dz(), 0.001f, 1.02f);
-                get(dnn::pfCand_ele_dz_sig) =  getValueNorm(std::abs(pfCands.at(index_pf_ele).bestTrack()->dz()) /
-                    pfCands.at(index_pf_ele).dzError(), 24.56f, 210.4f);
-                get(dnn::pfCand_ele_track_chi2_ndof) = getValueNorm(pfCands.at(index_pf_ele).bestTrack()->chi2() /
-                    pfCands.at(index_pf_ele).bestTrack()->ndof(), 2.272f, 8.439f);
-                get(dnn::pfCand_ele_track_ndof) = getValueNorm(pfCands.at(index_pf_ele).bestTrack()->ndof(), 15.18f, 3.203f);
-            }
-        }
-        if(valid_index_pf_gamma){
-            size_t index_pf_gamma = cell_map.at(CellObjectType::PfCand_gamma);
-            get(dnn::pfCand_gamma_valid) = valid_index_pf_gamma;
-            get(dnn::pfCand_gamma_rel_pt) = getValueNorm(pfCands.at(index_pf_gamma).polarP4().pt() / tau.polarP4().pt(),
-                is_inner ? 0.6048f : 0.02576f, is_inner ? 1.669f : 0.3833f);
-            get(dnn::pfCand_gamma_deta) = getValueLinear(pfCands.at(index_pf_gamma).polarP4().eta() - tau.polarP4().eta(),
-                is_inner ? -0.1f : -0.5f, is_inner ? 0.1f : 0.5f, false);
-            get(dnn::pfCand_gamma_dphi) = getValueLinear(dPhi(tau.polarP4(), pfCands.at(index_pf_gamma).polarP4()),
-                is_inner ? -0.1f : -0.5f, is_inner ? 0.1f : 0.5f, false);
-            //get(dnn::pfCand_gamma_pvAssociationQuality) =
-                //getValueLinear<int>(pfCands.at(index_pf_gamma).pvAssociationQuality(), 0, 7, true);
-            get(dnn::pfCand_gamma_pvAssociationQuality) = 0;
-            //get(dnn::pfCand_gamma_fromPV) = getValueLinear<int>(pfCands.at(index_pf_gamma).fromPV(), 0, 3, true);
-            get(dnn::pfCand_gamma_fromPV) = 0;
-            // get(dnn::pfCand_gamma_puppiWeight) = getValue(pfCands.at(index_pf_gamma).puppiWeight());
-            // get(dnn::pfCand_gamma_puppiWeightNoLep) = getValue(pfCands.at(index_pf_gamma).puppiWeightNoLep());
-            get(dnn::pfCand_gamma_puppiWeight) = 0;
-            get(dnn::pfCand_gamma_puppiWeightNoLep) = 0;
-            get(dnn::pfCand_gamma_lostInnerHits) = pfCands.at(index_pf_gamma).bestTrack() != nullptr ? getValue<int>(pfCands.at(index_pf_gamma).bestTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS)) : 0;
-            get(dnn::pfCand_gamma_numberOfPixelHits) = pfCands.at(index_pf_gamma).bestTrack() != nullptr ? getValueLinear(pfCands.at(index_pf_gamma).bestTrack()->hitPattern().numberOfValidPixelHits(), 0, 7, true) : 0;
-            get(dnn::pfCand_gamma_vertex_dx) = getValueNorm(pfCands.at(index_pf_gamma).vertex().x() - pv.position().x(), 0.f, 0.0067f);
-            get(dnn::pfCand_gamma_vertex_dy) = getValueNorm(pfCands.at(index_pf_gamma).vertex().y() - pv.position().y(), 0.f, 0.0069f);
-            get(dnn::pfCand_gamma_vertex_dz) = getValueNorm(pfCands.at(index_pf_gamma).vertex().z() - pv.position().z(), 0.f, 0.0578f);
-            // get(dnn::pfCand_gamma_vertex_dx_tauFL) = getValueNorm(pfCands.at(index_pf_gamma).vertex().x() -
-            //     pv.position().x() - tau.flightLength().x(), 0.001f, 0.9565f);
-            // get(dnn::pfCand_gamma_vertex_dy_tauFL) = getValueNorm(pfCands.at(index_pf_gamma).vertex().y() -
-            //     pv.position().y() - tau.flightLength().y(), 0.0008f, 0.9592f);
-            // get(dnn::pfCand_gamma_vertex_dz_tauFL) = getValueNorm(pfCands.at(index_pf_gamma).vertex().z() -
-            //     pv.position().z() - tau.flightLength().z(), 0.0038f, 2.154f);
-
-            //set temp to zero
-            get(dnn::pfCand_gamma_vertex_dx_tauFL) = 0;
-            get(dnn::pfCand_gamma_vertex_dy_tauFL) = 0;
-            get(dnn::pfCand_gamma_vertex_dz_tauFL) = 0;
-
-            const bool hasTrackDetails = pfCands.at(index_pf_gamma).bestTrack() != nullptr;
-            if(hasTrackDetails){
-                get(dnn::pfCand_gamma_hasTrackDetails) = hasTrackDetails;
-                get(dnn::pfCand_gamma_dxy) = getValueNorm(pfCands.at(index_pf_gamma).bestTrack()->dxy(), 0.0004f, 0.882f);
-                get(dnn::pfCand_gamma_dxy_sig) = getValueNorm(std::abs(pfCands.at(index_pf_gamma).bestTrack()->dxy()) /
-                    pfCands.at(index_pf_gamma).dxyError(), 4.271f, 63.78f);
-                get(dnn::pfCand_gamma_dz) =  getValueNorm(pfCands.at(index_pf_gamma).bestTrack()->dz(), 0.0071f, 5.285f);
-                get(dnn::pfCand_gamma_dz_sig) =  getValueNorm(std::abs(pfCands.at(index_pf_gamma).bestTrack()->dz()) /
-                    pfCands.at(index_pf_gamma).dzError(), 162.1f, 622.4f);
-                get(dnn::pfCand_gamma_track_chi2_ndof) = pfCands.at(index_pf_gamma).bestTrack()->ndof() > 0 ?
-                    getValueNorm(pfCands.at(index_pf_gamma).bestTrack()->chi2() /
-                                 pfCands.at(index_pf_gamma).bestTrack()->ndof(), 4.268f, 15.47f) : 0;
-                get(dnn::pfCand_gamma_track_ndof) = pfCands.at(index_pf_gamma).bestTrack()->ndof() > 0 ?
-                    getValueNorm(pfCands.at(index_pf_gamma).bestTrack()->ndof(), 12.25f, 4.774f) : 0;
-            }
-        }
-        if(valid_index_ele){
-            size_t index_ele = cell_map.at(CellObjectType::Electron);
-
-            get(dnn::ele_valid) = valid_index_ele;
-            get(dnn::ele_rel_pt) = getValueNorm(electrons.at(index_ele).polarP4().pt() / tau.polarP4().pt(),
-                is_inner ? 1.067f : 0.5111f, is_inner ? 1.521f : 2.765f);
-            get(dnn::ele_deta) = getValueLinear(electrons.at(index_ele).polarP4().eta() - tau.polarP4().eta(),
-                is_inner ? -0.1f : -0.5f, is_inner ? 0.1f : 0.5f, false);
-            get(dnn::ele_dphi) = getValueLinear(dPhi(tau.polarP4(), electrons.at(index_ele).polarP4()),
-                is_inner ? -0.1f : -0.5f, is_inner ? 0.1f : 0.5f, false);
-
-            float cc_ele_energy, cc_gamma_energy;
-            int cc_n_gamma;
-            const bool cc_valid = calculateElectronClusterVarsV2(electrons.at(index_ele), cc_ele_energy, cc_gamma_energy, cc_n_gamma);
-            if(cc_valid){
-                get(dnn::ele_cc_valid) = cc_valid;
-                get(dnn::ele_cc_ele_rel_energy) = getValueNorm(cc_ele_energy / electrons.at(index_ele).polarP4().pt(), 1.729f, 1.644f);
-                get(dnn::ele_cc_gamma_rel_energy) = getValueNorm(cc_gamma_energy / cc_ele_energy, 0.1439f, 0.3284f);
-                get(dnn::ele_cc_n_gamma) = getValueNorm(cc_n_gamma, 1.794f, 2.079f);
-            }
-            get(dnn::ele_rel_trackMomentumAtVtx) = getValueNorm(electrons.at(index_ele).trackMomentumAtVtx().R() /
-                electrons.at(index_ele).polarP4().pt(), 1.531f, 1.424f);
-            get(dnn::ele_rel_trackMomentumAtCalo) =  getValueNorm(electrons.at(index_ele).trackMomentumAtCalo().R() /
-                electrons.at(index_ele).polarP4().pt(), 1.531f, 1.424f);
-            get(dnn::ele_rel_trackMomentumOut) = getValueNorm(electrons.at(index_ele).trackMomentumOut().R() /
-                electrons.at(index_ele).polarP4().pt(), 0.7735f, 0.935f);
-            get(dnn::ele_rel_trackMomentumAtEleClus) = getValueNorm(electrons.at(index_ele).trackMomentumAtEleClus().R() /
-                electrons.at(index_ele).polarP4().pt(), 0.7735f, 0.935f);
-            get(dnn::ele_rel_trackMomentumAtVtxWithConstraint) =
-                getValueNorm(electrons.at(index_ele).trackMomentumAtVtxWithConstraint().R() /
-                electrons.at(index_ele).polarP4().pt(), 1.625f, 1.581f);
-            get(dnn::ele_rel_ecalEnergy) = getValueNorm(electrons.at(index_ele).ecalEnergy() /
-                electrons.at(index_ele).polarP4().pt(), 1.993f, 1.308f);
-            get(dnn::ele_ecalEnergy_sig) =  getValueNorm(electrons.at(index_ele).ecalEnergy() /
-                electrons.at(index_ele).ecalEnergyError(), 70.25f, 58.16f);
-            get(dnn::ele_eSuperClusterOverP) =  getValueNorm(electrons.at(index_ele).eSuperClusterOverP(), 2.432f, 15.13f);
-            get(dnn::ele_eSeedClusterOverP) = getValueNorm(electrons.at(index_ele).eSeedClusterOverP(), 2.034f, 13.96f);
-            get(dnn::ele_eSeedClusterOverPout) = getValueNorm(electrons.at(index_ele).eSeedClusterOverPout(), 6.64f, 36.8f);
-            get(dnn::ele_eEleClusterOverPout) = getValueNorm(electrons.at(index_ele).eEleClusterOverPout(), 4.183f, 20.63f);
-            get(dnn::ele_deltaEtaSuperClusterTrackAtVtx) =
-                getValueNorm(electrons.at(index_ele).deltaEtaSuperClusterTrackAtVtx(),0.f, 0.0363f);
-            get(dnn::ele_deltaEtaSeedClusterTrackAtCalo) =
-                getValueNorm(electrons.at(index_ele).deltaEtaSeedClusterTrackAtCalo(), -0.0001f, 0.0512f);
-            get(dnn::ele_deltaEtaEleClusterTrackAtCalo) =
-                getValueNorm(electrons.at(index_ele).deltaEtaEleClusterTrackAtCalo(), -0.0001f, 0.0541f);
-            get(dnn::ele_deltaPhiEleClusterTrackAtCalo) =
-                getValueNorm(electrons.at(index_ele).deltaPhiEleClusterTrackAtCalo(), 0.0002f, 0.0553f);
-            get(dnn::ele_deltaPhiSuperClusterTrackAtVtx) =
-                getValueNorm(electrons.at(index_ele).deltaPhiSuperClusterTrackAtVtx(), 0.0001f, 0.0523f);
-            get(dnn::ele_deltaPhiSeedClusterTrackAtCalo) =
-                getValueNorm(electrons.at(index_ele).deltaPhiSeedClusterTrackAtCalo(), 0.0004f, 0.0777f);
-            get(dnn::ele_mvaInput_earlyBrem) = getValue(electrons.at(index_ele).mvaInput().earlyBrem);
-            get(dnn::ele_mvaInput_lateBrem) = getValue(electrons.at(index_ele).mvaInput().lateBrem);
-            get(dnn::ele_mvaInput_sigmaEtaEta) = getValueNorm(electrons.at(index_ele).mvaInput().sigmaEtaEta,0.0008f, 0.0052f);
-            get(dnn::ele_mvaInput_hadEnergy) = getValueNorm(electrons.at(index_ele).mvaInput().hadEnergy, 14.04f, 69.48f);
-            get(dnn::ele_mvaInput_deltaEta) = getValueNorm(electrons.at(index_ele).mvaInput().deltaEta, 0.0099f, 0.0851f);
-
-            const auto& gsfTrack = electrons.at(index_ele).gsfTrack();
-            if(gsfTrack.isNonnull()){
-                get(dnn::ele_gsfTrack_normalizedChi2) = getValueNorm(gsfTrack->normalizedChi2(), 3.049f, 10.39f);
-                get(dnn::ele_gsfTrack_numberOfValidHits) = getValueNorm(gsfTrack->numberOfValidHits(), 16.52f, 2.806f);
-                get(dnn::ele_rel_gsfTrack_pt) = getValueNorm(gsfTrack->pt() / electrons.at(index_ele).polarP4().pt(), 1.355f, 16.81f);
-                get(dnn::ele_gsfTrack_pt_sig) = getValueNorm(gsfTrack->pt() / gsfTrack->ptError(), 5.046f, 3.119f);
-            }
-            const auto& closestCtfTrack = electrons.at(index_ele).closestCtfTrackRef();
-            const bool has_closestCtfTrack = closestCtfTrack.isNonnull();
-            if(has_closestCtfTrack){
-                get(dnn::ele_has_closestCtfTrack) = has_closestCtfTrack;
-                get(dnn::ele_closestCtfTrack_normalizedChi2) = getValueNorm(closestCtfTrack->normalizedChi2(), 2.411f, 6.98f);
-                get(dnn::ele_closestCtfTrack_numberOfValidHits) = getValueNorm(closestCtfTrack->numberOfValidHits(), 15.16f, 5.26f);
-            }
-        }
-        checkInputs(inputs, is_inner ? "egamma_inner_block" : "egamma_outer_block", dnn::NumberOfInputs);
+        // if(!cell_map.empty()){
+        //     get(dnn::rho) = getValueNorm(rho, 21.49f, 9.713f);
+        //     get(dnn::tau_pt) =  getValueLinear(tau.polarP4().pt(), 20.f, 1000.f, true);
+        //     get(dnn::tau_eta) = getValueLinear(tau.polarP4().eta(), -2.3f, 2.3f, false);
+        //     get(dnn::tau_inside_ecal_crack) = getValue(isInEcalCrack(tau.polarP4().eta()));
+        // }
+        // if(valid_index_pf_ele){
+        //     size_t index_pf_ele = cell_map.at(CellObjectType::PfCand_electron);
+        //
+        //     get(dnn::pfCand_ele_valid) = valid_index_pf_ele;
+        //     get(dnn::pfCand_ele_rel_pt) = getValueNorm(pfCands.at(index_pf_ele).polarP4().pt() / tau.polarP4().pt(),
+        //         is_inner ? 0.9792f : 0.304f, is_inner ? 0.5383f : 1.845f);
+        //     get(dnn::pfCand_ele_deta) = getValueLinear(pfCands.at(index_pf_ele).polarP4().eta() - tau.polarP4().eta(),
+        //         is_inner ? -0.1f : -0.5f, is_inner ? 0.1f : 0.5f, false);
+        //     get(dnn::pfCand_ele_dphi) = getValueLinear(dPhi(tau.polarP4(), pfCands.at(index_pf_ele).polarP4()),
+        //         is_inner ? -0.1f : -0.5f, is_inner ? 0.1f : 0.5f, false);
+        //     get(dnn::pfCand_ele_pvAssociationQuality) = getValueLinear<int>(pfCands.at(index_pf_ele).pvAssociationQuality(), 0, 7, true);
+        //     //get(dnn::pfCand_ele_pvAssociationQuality) = 0;
+        //     get(dnn::pfCand_ele_puppiWeight) = getValue(pfCands.at(index_pf_ele).puppiWeight());
+        //     //get(dnn::pfCand_ele_puppiWeight) = 0;
+        //     get(dnn::pfCand_ele_charge) = getValue(pfCands.at(index_pf_ele).charge());
+        //     get(dnn::pfCand_ele_lostInnerHits) = pfCands.at(index_pf_ele).bestTrack() != nullptr ? getValue<int>(pfCands.at(index_pf_ele).bestTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS)) : 0;
+        //     get(dnn::pfCand_ele_numberOfPixelHits) = pfCands.at(index_pf_ele).bestTrack() != nullptr ? getValueLinear(pfCands.at(index_pf_ele).bestTrack()->hitPattern().numberOfValidPixelHits(), 0, 10, true) : 0;
+        //     get(dnn::pfCand_ele_vertex_dx) = getValueNorm(pfCands.at(index_pf_ele).vertex().x() - pv.position().x(), 0.f, 0.1221f);
+        //     get(dnn::pfCand_ele_vertex_dy) = getValueNorm(pfCands.at(index_pf_ele).vertex().y() - pv.position().y(), 0.f, 0.1226f);
+        //     get(dnn::pfCand_ele_vertex_dz) = getValueNorm(pfCands.at(index_pf_ele).vertex().z() - pv.position().z(), 0.001f, 1.024f);
+        //     // get(dnn::pfCand_ele_vertex_dx_tauFL) = getValueNorm(pfCands.at(index_pf_ele).vertex().x() -
+        //     //     pv.position().x() - tau.flightLength().x(), 0.f, 0.3411f);
+        //     // get(dnn::pfCand_ele_vertex_dy_tauFL) = getValueNorm(pfCands.at(index_pf_ele).vertex().y() -
+        //     //     pv.position().y() - tau.flightLength().y(), 0.0003f, 0.3385f);
+        //     // get(dnn::pfCand_ele_vertex_dz_tauFL) = getValueNorm(pfCands.at(index_pf_ele).vertex().z() -
+        //     //     pv.position().z() - tau.flightLength().z(), 0.f, 1.307f);
+        //     //set temporary to zero
+        //     get(dnn::pfCand_ele_vertex_dx_tauFL) = 0;
+        //     get(dnn::pfCand_ele_vertex_dy_tauFL) = 0;
+        //     get(dnn::pfCand_ele_vertex_dz_tauFL) = 0;
+        //
+        //     const bool hasTrackDetails = pfCands.at(index_pf_ele).bestTrack() != nullptr;
+        //     if(hasTrackDetails){
+        //         get(dnn::pfCand_ele_hasTrackDetails) = hasTrackDetails;
+        //         get(dnn::pfCand_ele_dxy) = getValueNorm(pfCands.at(index_pf_ele).bestTrack()->dxy(), 0.f, 0.171f);
+        //         get(dnn::pfCand_ele_dxy_sig) = getValueNorm(std::abs(pfCands.at(index_pf_ele).bestTrack()->dxy()) /
+        //             pfCands.at(index_pf_ele).dxyError(), 1.634f, 6.45f);
+        //         get(dnn::pfCand_ele_dz) =  getValueNorm(pfCands.at(index_pf_ele).bestTrack()->dz(), 0.001f, 1.02f);
+        //         get(dnn::pfCand_ele_dz_sig) =  getValueNorm(std::abs(pfCands.at(index_pf_ele).bestTrack()->dz()) /
+        //             pfCands.at(index_pf_ele).dzError(), 24.56f, 210.4f);
+        //         get(dnn::pfCand_ele_track_chi2_ndof) = getValueNorm(pfCands.at(index_pf_ele).bestTrack()->chi2() /
+        //             pfCands.at(index_pf_ele).bestTrack()->ndof(), 2.272f, 8.439f);
+        //         get(dnn::pfCand_ele_track_ndof) = getValueNorm(pfCands.at(index_pf_ele).bestTrack()->ndof(), 15.18f, 3.203f);
+        //     }
+        // }
+        // if(valid_index_pf_gamma){
+        //     size_t index_pf_gamma = cell_map.at(CellObjectType::PfCand_gamma);
+        //     get(dnn::pfCand_gamma_valid) = valid_index_pf_gamma;
+        //     get(dnn::pfCand_gamma_rel_pt) = getValueNorm(pfCands.at(index_pf_gamma).polarP4().pt() / tau.polarP4().pt(),
+        //         is_inner ? 0.6048f : 0.02576f, is_inner ? 1.669f : 0.3833f);
+        //     get(dnn::pfCand_gamma_deta) = getValueLinear(pfCands.at(index_pf_gamma).polarP4().eta() - tau.polarP4().eta(),
+        //         is_inner ? -0.1f : -0.5f, is_inner ? 0.1f : 0.5f, false);
+        //     get(dnn::pfCand_gamma_dphi) = getValueLinear(dPhi(tau.polarP4(), pfCands.at(index_pf_gamma).polarP4()),
+        //         is_inner ? -0.1f : -0.5f, is_inner ? 0.1f : 0.5f, false);
+        //     //get(dnn::pfCand_gamma_pvAssociationQuality) =
+        //         //getValueLinear<int>(pfCands.at(index_pf_gamma).pvAssociationQuality(), 0, 7, true);
+        //     get(dnn::pfCand_gamma_pvAssociationQuality) = 0;
+        //     //get(dnn::pfCand_gamma_fromPV) = getValueLinear<int>(pfCands.at(index_pf_gamma).fromPV(), 0, 3, true);
+        //     get(dnn::pfCand_gamma_fromPV) = 0;
+        //     // get(dnn::pfCand_gamma_puppiWeight) = getValue(pfCands.at(index_pf_gamma).puppiWeight());
+        //     // get(dnn::pfCand_gamma_puppiWeightNoLep) = getValue(pfCands.at(index_pf_gamma).puppiWeightNoLep());
+        //     get(dnn::pfCand_gamma_puppiWeight) = 0;
+        //     get(dnn::pfCand_gamma_puppiWeightNoLep) = 0;
+        //     get(dnn::pfCand_gamma_lostInnerHits) = pfCands.at(index_pf_gamma).bestTrack() != nullptr ? getValue<int>(pfCands.at(index_pf_gamma).bestTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS)) : 0;
+        //     get(dnn::pfCand_gamma_numberOfPixelHits) = pfCands.at(index_pf_gamma).bestTrack() != nullptr ? getValueLinear(pfCands.at(index_pf_gamma).bestTrack()->hitPattern().numberOfValidPixelHits(), 0, 7, true) : 0;
+        //     get(dnn::pfCand_gamma_vertex_dx) = getValueNorm(pfCands.at(index_pf_gamma).vertex().x() - pv.position().x(), 0.f, 0.0067f);
+        //     get(dnn::pfCand_gamma_vertex_dy) = getValueNorm(pfCands.at(index_pf_gamma).vertex().y() - pv.position().y(), 0.f, 0.0069f);
+        //     get(dnn::pfCand_gamma_vertex_dz) = getValueNorm(pfCands.at(index_pf_gamma).vertex().z() - pv.position().z(), 0.f, 0.0578f);
+        //     // get(dnn::pfCand_gamma_vertex_dx_tauFL) = getValueNorm(pfCands.at(index_pf_gamma).vertex().x() -
+        //     //     pv.position().x() - tau.flightLength().x(), 0.001f, 0.9565f);
+        //     // get(dnn::pfCand_gamma_vertex_dy_tauFL) = getValueNorm(pfCands.at(index_pf_gamma).vertex().y() -
+        //     //     pv.position().y() - tau.flightLength().y(), 0.0008f, 0.9592f);
+        //     // get(dnn::pfCand_gamma_vertex_dz_tauFL) = getValueNorm(pfCands.at(index_pf_gamma).vertex().z() -
+        //     //     pv.position().z() - tau.flightLength().z(), 0.0038f, 2.154f);
+        //
+        //     //set temp to zero
+        //     get(dnn::pfCand_gamma_vertex_dx_tauFL) = 0;
+        //     get(dnn::pfCand_gamma_vertex_dy_tauFL) = 0;
+        //     get(dnn::pfCand_gamma_vertex_dz_tauFL) = 0;
+        //
+        //     const bool hasTrackDetails = pfCands.at(index_pf_gamma).bestTrack() != nullptr;
+        //     if(hasTrackDetails){
+        //         get(dnn::pfCand_gamma_hasTrackDetails) = hasTrackDetails;
+        //         get(dnn::pfCand_gamma_dxy) = getValueNorm(pfCands.at(index_pf_gamma).bestTrack()->dxy(), 0.0004f, 0.882f);
+        //         get(dnn::pfCand_gamma_dxy_sig) = getValueNorm(std::abs(pfCands.at(index_pf_gamma).bestTrack()->dxy()) /
+        //             pfCands.at(index_pf_gamma).dxyError(), 4.271f, 63.78f);
+        //         get(dnn::pfCand_gamma_dz) =  getValueNorm(pfCands.at(index_pf_gamma).bestTrack()->dz(), 0.0071f, 5.285f);
+        //         get(dnn::pfCand_gamma_dz_sig) =  getValueNorm(std::abs(pfCands.at(index_pf_gamma).bestTrack()->dz()) /
+        //             pfCands.at(index_pf_gamma).dzError(), 162.1f, 622.4f);
+        //         get(dnn::pfCand_gamma_track_chi2_ndof) = pfCands.at(index_pf_gamma).bestTrack()->ndof() > 0 ?
+        //             getValueNorm(pfCands.at(index_pf_gamma).bestTrack()->chi2() /
+        //                          pfCands.at(index_pf_gamma).bestTrack()->ndof(), 4.268f, 15.47f) : 0;
+        //         get(dnn::pfCand_gamma_track_ndof) = pfCands.at(index_pf_gamma).bestTrack()->ndof() > 0 ?
+        //             getValueNorm(pfCands.at(index_pf_gamma).bestTrack()->ndof(), 12.25f, 4.774f) : 0;
+        //     }
+        // }
+        // if(valid_index_ele){
+        //     size_t index_ele = cell_map.at(CellObjectType::Electron);
+        //
+        //     get(dnn::ele_valid) = valid_index_ele;
+        //     get(dnn::ele_rel_pt) = getValueNorm(electrons.at(index_ele).polarP4().pt() / tau.polarP4().pt(),
+        //         is_inner ? 1.067f : 0.5111f, is_inner ? 1.521f : 2.765f);
+        //     get(dnn::ele_deta) = getValueLinear(electrons.at(index_ele).polarP4().eta() - tau.polarP4().eta(),
+        //         is_inner ? -0.1f : -0.5f, is_inner ? 0.1f : 0.5f, false);
+        //     get(dnn::ele_dphi) = getValueLinear(dPhi(tau.polarP4(), electrons.at(index_ele).polarP4()),
+        //         is_inner ? -0.1f : -0.5f, is_inner ? 0.1f : 0.5f, false);
+        //
+        //     float cc_ele_energy, cc_gamma_energy;
+        //     int cc_n_gamma;
+        //     const bool cc_valid = calculateElectronClusterVarsV2(electrons.at(index_ele), cc_ele_energy, cc_gamma_energy, cc_n_gamma);
+        //     if(cc_valid){
+        //         get(dnn::ele_cc_valid) = cc_valid;
+        //         get(dnn::ele_cc_ele_rel_energy) = getValueNorm(cc_ele_energy / electrons.at(index_ele).polarP4().pt(), 1.729f, 1.644f);
+        //         get(dnn::ele_cc_gamma_rel_energy) = getValueNorm(cc_gamma_energy / cc_ele_energy, 0.1439f, 0.3284f);
+        //         get(dnn::ele_cc_n_gamma) = getValueNorm(cc_n_gamma, 1.794f, 2.079f);
+        //     }
+        //     get(dnn::ele_rel_trackMomentumAtVtx) = getValueNorm(electrons.at(index_ele).trackMomentumAtVtx().R() /
+        //         electrons.at(index_ele).polarP4().pt(), 1.531f, 1.424f);
+        //     get(dnn::ele_rel_trackMomentumAtCalo) =  getValueNorm(electrons.at(index_ele).trackMomentumAtCalo().R() /
+        //         electrons.at(index_ele).polarP4().pt(), 1.531f, 1.424f);
+        //     get(dnn::ele_rel_trackMomentumOut) = getValueNorm(electrons.at(index_ele).trackMomentumOut().R() /
+        //         electrons.at(index_ele).polarP4().pt(), 0.7735f, 0.935f);
+        //     get(dnn::ele_rel_trackMomentumAtEleClus) = getValueNorm(electrons.at(index_ele).trackMomentumAtEleClus().R() /
+        //         electrons.at(index_ele).polarP4().pt(), 0.7735f, 0.935f);
+        //     get(dnn::ele_rel_trackMomentumAtVtxWithConstraint) =
+        //         getValueNorm(electrons.at(index_ele).trackMomentumAtVtxWithConstraint().R() /
+        //         electrons.at(index_ele).polarP4().pt(), 1.625f, 1.581f);
+        //         //up to here GsfElectron vars, can be taken from PFCandidate?
+        //     get(dnn::ele_rel_ecalEnergy) = getValueNorm(electrons.at(index_ele).ecalEnergy() /
+        //         electrons.at(index_ele).polarP4().pt(), 1.993f, 1.308f);
+        //     get(dnn::ele_ecalEnergy_sig) =  getValueNorm(electrons.at(index_ele).ecalEnergy() /
+        //         electrons.at(index_ele).ecalEnergyError(), 70.25f, 58.16f);
+        //     get(dnn::ele_eSuperClusterOverP) =  getValueNorm(electrons.at(index_ele).eSuperClusterOverP(), 2.432f, 15.13f);
+        //     get(dnn::ele_eSeedClusterOverP) = getValueNorm(electrons.at(index_ele).eSeedClusterOverP(), 2.034f, 13.96f);
+        //     get(dnn::ele_eSeedClusterOverPout) = getValueNorm(electrons.at(index_ele).eSeedClusterOverPout(), 6.64f, 36.8f);
+        //     get(dnn::ele_eEleClusterOverPout) = getValueNorm(electrons.at(index_ele).eEleClusterOverPout(), 4.183f, 20.63f);
+        //     get(dnn::ele_deltaEtaSuperClusterTrackAtVtx) =
+        //         getValueNorm(electrons.at(index_ele).deltaEtaSuperClusterTrackAtVtx(),0.f, 0.0363f);
+        //     get(dnn::ele_deltaEtaSeedClusterTrackAtCalo) =
+        //         getValueNorm(electrons.at(index_ele).deltaEtaSeedClusterTrackAtCalo(), -0.0001f, 0.0512f);
+        //     get(dnn::ele_deltaEtaEleClusterTrackAtCalo) =
+        //         getValueNorm(electrons.at(index_ele).deltaEtaEleClusterTrackAtCalo(), -0.0001f, 0.0541f);
+        //     get(dnn::ele_deltaPhiEleClusterTrackAtCalo) =
+        //         getValueNorm(electrons.at(index_ele).deltaPhiEleClusterTrackAtCalo(), 0.0002f, 0.0553f);
+        //     get(dnn::ele_deltaPhiSuperClusterTrackAtVtx) =
+        //         getValueNorm(electrons.at(index_ele).deltaPhiSuperClusterTrackAtVtx(), 0.0001f, 0.0523f);
+        //     get(dnn::ele_deltaPhiSeedClusterTrackAtCalo) =
+        //         getValueNorm(electrons.at(index_ele).deltaPhiSeedClusterTrackAtCalo(), 0.0004f, 0.0777f);
+        //     get(dnn::ele_mvaInput_earlyBrem) = getValue(electrons.at(index_ele).mvaInput().earlyBrem);
+        //     get(dnn::ele_mvaInput_lateBrem) = getValue(electrons.at(index_ele).mvaInput().lateBrem);
+        //     get(dnn::ele_mvaInput_sigmaEtaEta) = getValueNorm(electrons.at(index_ele).mvaInput().sigmaEtaEta,0.0008f, 0.0052f);
+        //     get(dnn::ele_mvaInput_hadEnergy) = getValueNorm(electrons.at(index_ele).mvaInput().hadEnergy, 14.04f, 69.48f);
+        //     get(dnn::ele_mvaInput_deltaEta) = getValueNorm(electrons.at(index_ele).mvaInput().deltaEta, 0.0099f, 0.0851f);
+        //
+        //     const auto& gsfTrack = electrons.at(index_ele).gsfTrack();
+        //     if(gsfTrack.isNonnull()){
+        //         get(dnn::ele_gsfTrack_normalizedChi2) = getValueNorm(gsfTrack->normalizedChi2(), 3.049f, 10.39f);
+        //         get(dnn::ele_gsfTrack_numberOfValidHits) = getValueNorm(gsfTrack->numberOfValidHits(), 16.52f, 2.806f);
+        //         get(dnn::ele_rel_gsfTrack_pt) = getValueNorm(gsfTrack->pt() / electrons.at(index_ele).polarP4().pt(), 1.355f, 16.81f);
+        //         get(dnn::ele_gsfTrack_pt_sig) = getValueNorm(gsfTrack->pt() / gsfTrack->ptError(), 5.046f, 3.119f);
+        //     }
+        //     const auto& closestCtfTrack = electrons.at(index_ele).closestCtfTrackRef();
+        //     const bool has_closestCtfTrack = closestCtfTrack.isNonnull();
+        //     if(has_closestCtfTrack){
+        //         get(dnn::ele_has_closestCtfTrack) = has_closestCtfTrack;
+        //         get(dnn::ele_closestCtfTrack_normalizedChi2) = getValueNorm(closestCtfTrack->normalizedChi2(), 2.411f, 6.98f);
+        //         get(dnn::ele_closestCtfTrack_numberOfValidHits) = getValueNorm(closestCtfTrack->numberOfValidHits(), 15.16f, 5.26f);
+        //     }
+        // }
+        // checkInputs(inputs, is_inner ? "egamma_inner_block" : "egamma_outer_block", dnn::NumberOfInputs);
     }
 
     void createMuonBlockInputs(const TauType& tau, const reco::Vertex& pv, double rho,
@@ -1264,7 +1275,7 @@ private:
         checkInputs(inputs, is_inner ? "hadron_inner_block" : "hadron_outer_block", dnn::NumberOfInputs);
     }
 
-    static void calculateElectronClusterVars(const pat::Electron* ele, float& elecEe, float& elecEgamma)
+    static void calculateElectronClusterVars(const reco::Electron* ele, float& elecEe, float& elecEgamma)
     {
         if(ele) {
             elecEe = elecEgamma = 0;
@@ -1379,11 +1390,11 @@ private:
         return abs_eta > 1.46 && abs_eta < 1.558;
     }
 
-    static const pat::Electron* findMatchedElectron(const reco::PFTau& tau, const ElectronCollection& electrons,
+    static const reco::Electron* findMatchedElectron(const reco::PFTau& tau, const ElectronCollection& electrons,
                                                     double deltaR)
     {
         const double dR2 = deltaR*deltaR;
-        const pat::Electron* matched_ele = nullptr;
+        const reco::Electron* matched_ele = nullptr;
         for(const auto& ele : electrons) {
             if(reco::deltaR2(tau.p4(), ele.p4()) < dR2 && (!matched_ele || matched_ele->pt() < ele.pt())) {
                 matched_ele = &ele;
@@ -1393,12 +1404,12 @@ private:
     }
 
 private:
-    //edm::EDGetTokenT<ElectronCollection> electrons_token_;
+    edm::EDGetTokenT<ElectronCollection> electrons_token_;
     edm::EDGetTokenT<MuonCollection> muons_token_;
     edm::EDGetTokenT<double> rho_token_;
-    edm::EDGetTokenT<TauDiscriminator> chargedIsoPtSum_inputToken;
-    edm::EDGetTokenT<TauDiscriminator> neutralIsoPtSum_inputToken;
-    edm::EDGetTokenT<TauDiscriminator> puCorrPtSum_inputToken;
+    // edm::EDGetTokenT<TauDiscriminator> chargedIsoPtSum_inputToken;
+    // edm::EDGetTokenT<TauDiscriminator> neutralIsoPtSum_inputToken;
+    // edm::EDGetTokenT<TauDiscriminator> puCorrPtSum_inputToken;
     std::string input_layer_, output_layer_;
     const unsigned version;
     const int debug_level;

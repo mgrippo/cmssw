@@ -6,6 +6,7 @@ import FWCore.ParameterSet.Config as cms
 
 from RecoTauTag.RecoTau.PFRecoTauDiscriminationByIsolation_cfi import *
 from RecoTauTag.RecoTau.RecoTauDiscriminantCutMultiplexer_cfi import *
+from RecoTauTag.RecoTau.PFRecoTauQualityCuts_cfi import PFTauQualityCuts
 
 fragment = cms.ProcessFragment( "HLT" )
 
@@ -13305,53 +13306,74 @@ file_names = [
                 'inner:RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6_inner.pb',
                 'outer:RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6_outer.pb',
             ]
-fragment.chargedIsoPtSum = pfRecoTauDiscriminationByIsolation.clone(
-    PFTauProducer = cms.InputTag('hltHpsPFTauProducerReg'),
-    particleFlowSrc = cms.InputTag("hltParticleFlowReg"),
-    vertexSrc = cms.InputTag("hltPixelVertices"),
-    ApplyDiscriminationByECALIsolation = cms.bool(False),
-    ApplyDiscriminationByTrackerIsolation = cms.bool(True),
-    applyOccupancyCut = cms.bool(False),
-    applySumPtCut = cms.bool(False),
-    applyDeltaBetaCorrection = cms.bool(False),
-    storeRawSumPt = cms.bool(True),
-    storeRawPUsumPt = cms.bool(False),
-    customOuterCone = cms.double(0.5),
-    isoConeSizeForDeltaBeta = cms.double(0.8),
-    verbosity = cms.int32(0)
-)
-fragment.neutralIsoPtSum = pfRecoTauDiscriminationByIsolation.clone(
-    PFTauProducer = cms.InputTag('hltHpsPFTauProducerReg'),
-    particleFlowSrc = cms.InputTag("hltParticleFlowReg"),
-    vertexSrc = cms.InputTag("hltPixelVertices"),
-    ApplyDiscriminationByECALIsolation = cms.bool(True),
-    ApplyDiscriminationByTrackerIsolation = cms.bool(False),
-    applyOccupancyCut = cms.bool(False),
-    applySumPtCut = cms.bool(False),
-    applyDeltaBetaCorrection = cms.bool(False),
-    storeRawSumPt = cms.bool(True),
-    storeRawPUsumPt = cms.bool(False),
-    customOuterCone = cms.double(0.5),
-    isoConeSizeForDeltaBeta = cms.double(0.8),
-    verbosity = cms.int32(0)
-)
-fragment.puCorrPtSum = pfRecoTauDiscriminationByIsolation.clone(
-    PFTauProducer = cms.InputTag('hltHpsPFTauProducerReg'),
-    particleFlowSrc = cms.InputTag("hltParticleFlowReg"),
-    vertexSrc = cms.InputTag("hltPixelVertices"),
-    ApplyDiscriminationByECALIsolation = cms.bool(False),
-    ApplyDiscriminationByTrackerIsolation = cms.bool(False),
-    applyOccupancyCut = cms.bool(False),
-    applySumPtCut = cms.bool(False),
-    applyDeltaBetaCorrection = cms.bool(True),
-    storeRawSumPt = cms.bool(False),
-    storeRawPUsumPt = cms.bool(True),
-    customOuterCone = cms.double(0.5),
-    isoConeSizeForDeltaBeta = cms.double(0.8),
-    verbosity = cms.int32(0)
-)
+
+# from RecoTauTag.RecoTau.TauDiscriminatorTools import noPrediscriminants
+# from RecoTauTag.RecoTau.PFRecoTauDiscriminationByLeadingObjectPtCut_cfi import pfRecoTauDiscriminationByLeadingObjectPtCut
+#
+# fragment.pfRecoTauDiscriminationByLeadingTrackFinding = pfRecoTauDiscriminationByLeadingObjectPtCut.clone(
+#     # Tau collection to discriminate
+#     PFTauProducer = cms.InputTag('hltHpsPFTauProducerReg'),
+#
+#     # Only look for charged PFCandidates
+#     UseOnlyChargedHadrons = cms.bool(True),
+#
+#     # no pre-reqs for this cut
+#     Prediscriminants = noPrediscriminants,
+#
+#     # Any *existing* charged PFCandidate will meet this requirement - so it is
+#     # a test for existence, not pt
+#     MinPtLeadingObject = cms.double(0.0)
+# )
+#
+# PFTauQualityCuts.primaryVertexSrc = cms.InputTag("hltPixelVertices")
+#
+# fragment.chargedIsoPtSum = pfRecoTauDiscriminationByIsolation.clone(
+#     PFTauProducer = cms.InputTag('hltHpsPFTauProducerReg'),
+#     particleFlowSrc = cms.InputTag("hltParticleFlowReg"),
+#     vertexSrc = PFTauQualityCuts.primaryVertexSrc,
+#     ApplyDiscriminationByECALIsolation = cms.bool(False),
+#     ApplyDiscriminationByTrackerIsolation = cms.bool(True),
+#     applyOccupancyCut = cms.bool(False),
+#     applySumPtCut = cms.bool(False),
+#     applyDeltaBetaCorrection = cms.bool(False),
+#     storeRawSumPt = cms.bool(True),
+#     storeRawPUsumPt = cms.bool(False),
+#     customOuterCone = cms.double(0.5),
+#     isoConeSizeForDeltaBeta = cms.double(0.8),
+#     verbosity = cms.int32(0)
+# )
+# fragment.neutralIsoPtSum = pfRecoTauDiscriminationByIsolation.clone(
+#     PFTauProducer = cms.InputTag('hltHpsPFTauProducerReg'),
+#     particleFlowSrc = cms.InputTag("hltParticleFlowReg"),
+#     vertexSrc = cms.InputTag("hltPixelVertices"),
+#     ApplyDiscriminationByECALIsolation = cms.bool(True),
+#     ApplyDiscriminationByTrackerIsolation = cms.bool(False),
+#     applyOccupancyCut = cms.bool(False),
+#     applySumPtCut = cms.bool(False),
+#     applyDeltaBetaCorrection = cms.bool(False),
+#     storeRawSumPt = cms.bool(True),
+#     storeRawPUsumPt = cms.bool(False),
+#     customOuterCone = cms.double(0.5),
+#     isoConeSizeForDeltaBeta = cms.double(0.8),
+#     verbosity = cms.int32(0)
+# )
+# fragment.puCorrPtSum = pfRecoTauDiscriminationByIsolation.clone(
+#     PFTauProducer = cms.InputTag('hltHpsPFTauProducerReg'),
+#     particleFlowSrc = cms.InputTag("hltParticleFlowReg"),
+#     vertexSrc = cms.InputTag("hltPixelVertices"),
+#     ApplyDiscriminationByECALIsolation = cms.bool(False),
+#     ApplyDiscriminationByTrackerIsolation = cms.bool(False),
+#     applyOccupancyCut = cms.bool(False),
+#     applySumPtCut = cms.bool(False),
+#     applyDeltaBetaCorrection = cms.bool(True),
+#     storeRawSumPt = cms.bool(False),
+#     storeRawPUsumPt = cms.bool(True),
+#     customOuterCone = cms.double(0.5),
+#     isoConeSizeForDeltaBeta = cms.double(0.8),
+#     verbosity = cms.int32(0)
+# )
 fragment.deepTauProducer = cms.EDProducer("DeepTauId",
-    #electrons                = cms.InputTag('slimmedElectrons'),
+    electrons                = cms.InputTag('hltESPElectronMaterialEffects'), #boh!
     muons                    = cms.InputTag('hltMuonsReg'),
     taus                     = cms.InputTag("hltHpsPFTauProducerReg"),
     pfcands                  = cms.InputTag('hltParticleFlowReg'),
@@ -13361,10 +13383,10 @@ fragment.deepTauProducer = cms.EDProducer("DeepTauId",
     mem_mapped               = cms.bool(True),
     version                  = cms.uint32(2),
     debug_level              = cms.int32(0),
-    disable_dxy_pca          = cms.bool(True),
-    chargedIsoPtSum          = cms.InputTag('chargedIsoPtSum'),
-    neutralIsoPtSum          = cms.InputTag('neutralIsoPtSum'),
-    puCorrPtSum              = cms.InputTag('puCorrPtSum')
+    disable_dxy_pca          = cms.bool(True)
+    #chargedIsoPtSum          = cms.InputTag('chargedIsoPtSum'),
+    #neutralIsoPtSum          = cms.InputTag('neutralIsoPtSum'),
+    #puCorrPtSum              = cms.InputTag('puCorrPtSum')
 )
 fragment.hltHpsPFTauLooseAbsoluteChargedIsolationDiscriminator = cms.EDProducer( "PFRecoTauDiscriminationByIsolation",
     applyRhoCorrection = cms.bool( False ),
@@ -14108,7 +14130,8 @@ fragment.HLTPFJetTriggerSequenceRegNoMu = cms.Sequence( fragment.HLTTrackReconst
 fragment.HLTPFJetTriggerSequenceReg = cms.Sequence( fragment.HLTL2muonrecoSequence + fragment.HLTL3muonrecoSequence + fragment.HLTPFJetTriggerSequenceRegNoMu )
 fragment.HLTPFTauHPSReg = cms.Sequence( fragment.hltTauPFJets08RegionReg + fragment.hltHpsTauPFJetsRecoTauChargedHadronsWithNeutralsReg + fragment.hltPFTauPiZerosReg + fragment.hltHpsCombinatoricRecoTausReg + fragment.hltHpsSelectionDiscriminatorReg + fragment.hltHpsPFTauProducerSansRefsReg + fragment.hltHpsPFTauProducerReg + fragment.hltHpsPFTauDiscriminationByDecayModeFindingNewDMsReg + fragment.hltHpsPFTauTrackFindingDiscriminatorReg + fragment.hltHpsSelectedPFTausTrackFindingReg + fragment.hltHpsPFTauTrackReg )
 fragment.HLTRegionalPFTauHPSSequence = cms.Sequence( fragment.hltStripTrackerHVOn + fragment.hltPixelTrackerHVOn + fragment.HLTRecoJetSequenceAK4PrePF + fragment.HLTPFJetTriggerSequenceReg + fragment.HLTPFTauHPSReg )
-fragment.HLTHPSDoublePFTauPt35Eta2p1Trk1Reg = cms.Sequence( fragment.hltHpsDoublePFTau35Reg + fragment.hltHpsPFTauTrackPt1DiscriminatorReg + fragment.hltHpsSelectedPFTausTrackPt1Reg + fragment.hltHpsDoublePFTau35TrackPt1Reg + fragment.chargedIsoPtSum + fragment.neutralIsoPtSum + fragment.puCorrPtSum + fragment.deepTauProducer  )
+fragment.HLTHPSDoublePFTauPt35Eta2p1Trk1Reg = cms.Sequence( fragment.hltHpsDoublePFTau35Reg + fragment.hltHpsPFTauTrackPt1DiscriminatorReg + fragment.hltHpsSelectedPFTausTrackPt1Reg + fragment.hltHpsDoublePFTau35TrackPt1Reg  + fragment.deepTauProducer  )
+#fragment.pfRecoTauDiscriminationByLeadingTrackFinding + fragment.chargedIsoPtSum + fragment.neutralIsoPtSum + fragment.puCorrPtSum
 #fragment.HLTHPSMediumChargedIsoPFTauSequenceReg = cms.Sequence( fragment.hltHpsPFTauMediumAbsoluteChargedIsolationDiscriminatorReg + fragment.hltHpsPFTauMediumRelativeChargedIsolationDiscriminatorReg + fragment.hltHpsPFTauMediumAbsOrRelChargedIsolationDiscriminatorReg )
 fragment.HLTHPSMediumChargedIsoPFTauSequenceReg = cms.Sequence( fragment.hltHpsPFTauLooseAbsoluteChargedIsolationDiscriminator + fragment.hltHpsPFTauLooseRelativeChargedIsolationDiscriminator + fragment.hltHpsPFTauMediumAbsoluteChargedIsolationDiscriminatorReg + fragment.hltHpsPFTauMediumRelativeChargedIsolationDiscriminatorReg +fragment.hltHpsPFTauTightAbsoluteChargedIsolationDiscriminatorReg + fragment.hltHpsPFTauTightRelativeChargedIsolationDiscriminatorReg + fragment.dummyFilter )
 fragment.HLTEndSequence = cms.Sequence( fragment.hltBoolEnd )
