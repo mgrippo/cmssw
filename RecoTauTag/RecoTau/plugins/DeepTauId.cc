@@ -8,7 +8,7 @@
 
 #include "RecoTauTag/RecoTau/interface/DeepTauBase.h"
 #include "FWCore/Utilities/interface/isFinite.h"
-#include "DataFormats/MuonReco/interface/MuonSelectors.h"
+
 
 namespace deep_tau {
     constexpr int NumberOfOutputs = 4;
@@ -264,7 +264,7 @@ enum class CellObjectType { PfCand_electron, PfCand_muon, PfCand_chargedHadron, 
 template<typename Object>
 CellObjectType GetCellObjectType(const Object&);
 template<>
-CellObjectType GetCellObjectType(const reco::Electron&) { return CellObjectType::Electron; }
+CellObjectType GetCellObjectType(const reco::RecoEcalCandidate&) { return CellObjectType::Electron; }
 template<>
 CellObjectType GetCellObjectType(const reco::Muon&) { return CellObjectType::Muon; }
 
@@ -377,9 +377,10 @@ public:
         desc.add<edm::InputTag>("pfcands", edm::InputTag("packedPFCandidates"));
         desc.add<edm::InputTag>("vertices", edm::InputTag("offlineSlimmedPrimaryVertices"));
         desc.add<edm::InputTag>("rho", edm::InputTag("hltFixedGridRhoFastjetAll"));
-        // desc.add<edm::InputTag>("chargedIsoPtSum", edm::InputTag("chargedIsoPtSum"));
-        // desc.add<edm::InputTag>("neutralIsoPtSum", edm::InputTag("neutralIsoPtSum"));
-        // desc.add<edm::InputTag>("puCorrPtSum", edm::InputTag("puCorrPtSum"));
+        desc.add<edm::InputTag>("PFTauTransverseImpactParameters", edm::InputTag("hpsPFTauTransverseImpactParameters"));
+        desc.add<edm::InputTag>("chargedIsoPtSum", edm::InputTag("chargedIsoPtSum"));
+        desc.add<edm::InputTag>("neutralIsoPtSum", edm::InputTag("neutralIsoPtSum"));
+        desc.add<edm::InputTag>("puCorrPtSum", edm::InputTag("puCorrPtSum"));
         desc.add<std::vector<std::string>>("graph_file", {"RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6.pb"});
         desc.add<bool>("mem_mapped", false);
         desc.add<unsigned>("version", 2);
@@ -408,12 +409,13 @@ public:
         electrons_token_(consumes<ElectronCollection>(cfg.getParameter<edm::InputTag>("electrons"))),
         muons_token_(consumes<MuonCollection>(cfg.getParameter<edm::InputTag>("muons"))),
         rho_token_(consumes<double>(cfg.getParameter<edm::InputTag>("rho"))),
-        // chargedIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("chargedIsoPtSum"))),
-        // neutralIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("neutralIsoPtSum"))),
-        // puCorrPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("puCorrPtSum"))),
+        PFTauTransverseImpactParameters_token(consumes<reco::PFTauTIPAssociationRef>(cfg.getParameter<edm::InputTag>("PFTauTransverseImpactParameters"))),
+        chargedIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("chargedIsoPtSum"))),
+        neutralIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("neutralIsoPtSum"))),
+        puCorrPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("puCorrPtSum"))),
         version(cfg.getParameter<unsigned>("version")),
         debug_level(cfg.getParameter<int>("debug_level")),
-	disable_dxy_pca_(cfg.getParameter<bool>("disable_dxy_pca"))
+	    disable_dxy_pca_(cfg.getParameter<bool>("disable_dxy_pca"))
     {
         if(version == 1) {
             input_layer_ = cache_->getGraph().node(0).name();
@@ -489,7 +491,7 @@ private:
         return std::clamp(norm_value, -n_sigmas_max, n_sigmas_max);
     }
 
-    static bool calculateElectronClusterVarsV2(const reco::Electron& ele, float& cc_ele_energy, float& cc_gamma_energy,
+    static bool calculateElectronClusterVarsV2(const reco::RecoEcalCandidate& ele, float& cc_ele_energy, float& cc_gamma_energy,
                                              int& cc_n_gamma)
     {
         cc_ele_energy = cc_gamma_energy = 0;
@@ -537,6 +539,7 @@ private:
     {
         edm::Handle<ElectronCollection> electrons;
         event.getByToken(electrons_token_, electrons);
+        //ElectronCollection electrons;
 
         edm::Handle<MuonCollection> muons;
         event.getByToken(muons_token_, muons);
@@ -551,22 +554,27 @@ private:
         edm::Handle<double> rho;
         event.getByToken(rho_token_, rho);
 
-        // edm::Handle<TauDiscriminator> chargedIsoPtSum;
-        // event.getByToken(chargedIsoPtSum_inputToken, chargedIsoPtSum);
-        //
-        // edm::Handle<TauDiscriminator> neutralIsoPtSum;
-        // event.getByToken(neutralIsoPtSum_inputToken, neutralIsoPtSum);
-        //
-        // edm::Handle<TauDiscriminator> puCorrPtSum;
-        // event.getByToken(puCorrPtSum_inputToken, puCorrPtSum);
+        edm::Handle<reco::PFTauTIPAssociationRef> PFTauTransverseImpactParameters;
+        event.getByToken(PFTauTransverseImpactParameters_token, PFTauTransverseImpactParameters);
+
+        edm::Handle<TauDiscriminator> chargedIsoPtSum;
+        event.getByToken(chargedIsoPtSum_inputToken, chargedIsoPtSum);
+
+        edm::Handle<TauDiscriminator> neutralIsoPtSum;
+        event.getByToken(neutralIsoPtSum_inputToken, neutralIsoPtSum);
+
+        edm::Handle<TauDiscriminator> puCorrPtSum;
+        event.getByToken(puCorrPtSum_inputToken, puCorrPtSum);
+
+
 
         tensorflow::Tensor predictions(tensorflow::DT_FLOAT, { static_cast<int>(taus->size()),
                                        deep_tau::NumberOfOutputs});
         for(size_t tau_index = 0; tau_index < taus->size(); ++tau_index) {
             std::vector<tensorflow::Tensor> pred_vector;
+            reco::PFTauRef pfTauRef(taus, tau_index);
             if(version == 2)
-                //getPredictionsV2(taus->at(tau_index), tau_index, *electrons, *muons, *pfCands, vertices->at(0), *rho, pred_vector, *chargedIsoPtSum, *neutralIsoPtSum, *puCorrPtSum);
-                getPredictionsV2(taus->at(tau_index), tau_index, *electrons, *muons, *pfCands, vertices->at(0), *rho, pred_vector);
+                getPredictionsV2(taus->at(tau_index), tau_index, pfTauRef, *electrons, *muons, *pfCands, vertices->at(0), *rho, pred_vector, PFTauTransverseImpactParameters, *chargedIsoPtSum, *neutralIsoPtSum, *puCorrPtSum);
             else
                 throw cms::Exception("DeepTauId") << "version " << version << " is not supported.";
             for(int k = 0; k < deep_tau::NumberOfOutputs; ++k) {
@@ -581,11 +589,12 @@ private:
     }
 
 
-    void getPredictionsV2(const TauType& tau, size_t tau_index, const ElectronCollection& electrons,
+    void getPredictionsV2(const TauType& tau, size_t tau_index, reco::PFTauRef pfTauRef, const ElectronCollection& electrons,
                           const MuonCollection& muons, const std::vector<reco::PFCandidate>& pfCands,
-                          const reco::Vertex& pv, double rho, std::vector<tensorflow::Tensor>& pred_vector)
-                          // const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& neutralIsoPtSum,
-                          // const TauDiscriminator& puCorrPtSum)
+                          const reco::Vertex& pv, double rho, std::vector<tensorflow::Tensor>& pred_vector,
+                          edm::Handle<reco::PFTauTIPAssociationRef> PFTauTransverseImpactParameters,
+                          const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& neutralIsoPtSum,
+                          const TauDiscriminator& puCorrPtSum)
     {
         CellGrid inner_grid(dnn_inputs_2017_v2::number_of_inner_cell, dnn_inputs_2017_v2::number_of_inner_cell,
                             0.02, 0.02);
@@ -595,8 +604,7 @@ private:
         fillGrids(tau, muons, inner_grid, outer_grid);
         fillGrids(tau, pfCands, inner_grid, outer_grid);
 
-        //createTauBlockInputs(tau, tau_index, pv, rho, chargedIsoPtSum, neutralIsoPtSum, puCorrPtSum);
-        createTauBlockInputs(tau, tau_index, pv, rho);
+        createTauBlockInputs(tau, tau_index, pfTauRef, pv, rho, PFTauTransverseImpactParameters, chargedIsoPtSum, neutralIsoPtSum, puCorrPtSum);
         createConvFeatures(tau, pv, rho, electrons, muons, pfCands, inner_grid, true);
         createConvFeatures(tau, pv, rho, electrons, muons, pfCands, outer_grid, false);
 
@@ -693,9 +701,10 @@ private:
             convTensor.tensor<float, 4>()(0, eta_index, phi_index, n) = features.tensor<float, 4>()(0, 0, 0, n);
     }
 
-    void createTauBlockInputs(const TauType& tau, size_t tau_index, const reco::Vertex& pv, double rho)
-    //     const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& neutralIsoPtSum,
-    // const TauDiscriminator& puCorrPtSum)
+    void createTauBlockInputs(const TauType& tau, size_t tau_index, reco::PFTauRef pfTauRef, const reco::Vertex& pv, double rho,
+                              edm::Handle<reco::PFTauTIPAssociationRef> PFTauTransverseImpactParameters,
+                              const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& neutralIsoPtSum,
+                              const TauDiscriminator& puCorrPtSum)
     {
         namespace dnn = dnn_inputs_2017_v2::TauBlockInputs;
 
@@ -728,18 +737,15 @@ private:
         //set temporary to zero
         //all params here: https://github.com/cms-sw/cmssw/blob/1d43ce3ab10966880bbac407c8d944fc7e3add42/PhysicsTools/PatAlgos/python/producersLayer1/tauProducer_cfi.py
         //https://github.com/cms-sw/cmssw/blob/808a7f65d11ee25b76ec246b2baba00fad79fbaa/RecoTauTag/Configuration/python/HPSPFTaus_cff.py#L454 ---so??
-        //get(dnn::chargedIsoPtSum) = getValueNorm(chargedIsoPtSum.value(tau_index), 47.78f, 123.5f);
-        get(dnn::chargedIsoPtSum) = 0;
+        get(dnn::chargedIsoPtSum) = getValueNorm(chargedIsoPtSum.value(tau_index), 47.78f, 123.5f);
         get(dnn::chargedIsoPtSumdR03_over_dR05) = 0;
         get(dnn::footprintCorrection) = 0;
-        get(dnn::neutralIsoPtSum) = 0;
-        //getValueNorm(neutralIsoPtSum.value(tau_index), 57.59f, 155.3f);
+        get(dnn::neutralIsoPtSum) = getValueNorm(neutralIsoPtSum.value(tau_index), 57.59f, 155.3f);
         get(dnn::neutralIsoPtSumWeight_over_neutralIsoPtSum) = 0;
         get(dnn::neutralIsoPtSumWeightdR03_over_neutralIsoPtSum) = 0;
         get(dnn::neutralIsoPtSumdR03_over_dR05) = 0;
         get(dnn::photonPtSumOutsideSignalCone) = 0;
-        get(dnn::puCorrPtSum) = 0;
-        //getValueNorm(puCorrPtSum.value(tau_index), 22.38f, 16.34f);
+        get(dnn::puCorrPtSum) = getValueNorm(puCorrPtSum.value(tau_index), 22.38f, 16.34f);
 	// The global PCA coordinates were used as inputs during the NN training, but it was decided to disable
 	// them for the inference, because modeling of dxy_PCA in MC poorly describes the data, and x and y coordinates
 	// in data results outside of the expected 5 std. dev. input validity range. On the other hand,
@@ -757,18 +763,18 @@ private:
             get(dnn::tau_dxy) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? leadChargedHadrCand->bestTrack()->dxy() : default_value, 0.0018f, 0.0085f);
             get(dnn::tau_dxy_sig) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? std::abs(leadChargedHadrCand->bestTrack()->dxy())/tau.dxyError() : default_value, 2.26f, 4.191f);
         }
-        // const bool tau_ip3d_valid = std::isnormal(tau.ip3d()) && tau.ip3d() > - 10 && std::isnormal(tau.ip3d_error())
-        //     && tau.ip3d_error() > 0;
-        const bool tau_ip3d_valid = false;
+
+        const reco::PFTauTransverseImpactParameter& impactParam = (*(*PFTauTransverseImpactParameters))[pfTauRef];
+
+        const bool tau_ip3d_valid = std::isnormal(impactParam.ip3d()) && impactParam.ip3d() > - 10 && std::isnormal(impactParam.ip3d_error())
+            && impactParam.ip3d_error() > 0;
+
         //https://github.com/cms-sw/cmssw/blob/2ba5d421e10379d81760a899532b2c991b89c82c/DataFormats/TauReco/interface/PFTauTransverseImpactParameter.h
-        //if(tau_ip3d_valid){
-            // get(dnn::tau_ip3d_valid) = tau_ip3d_valid;
-            // get(dnn::tau_ip3d) = getValueNorm(tau.ip3d(), 0.0026f, 0.0114f);
-            // get(dnn::tau_ip3d_sig) = getValueNorm(std::abs(tau.ip3d()) / tau.ip3d_error(), 2.928f, 4.466f);
+        if(tau_ip3d_valid){
             get(dnn::tau_ip3d_valid) = tau_ip3d_valid;
-            get(dnn::tau_ip3d) = 0;
-            get(dnn::tau_ip3d_sig) = 0;
-        //}
+            get(dnn::tau_ip3d) = getValueNorm(impactParam.ip3d(), 0.0026f, 0.0114f);
+            get(dnn::tau_ip3d_sig) = getValueNorm(std::abs(impactParam.ip3d()) / impactParam.ip3d_error(), 2.928f, 4.466f);
+        }
         if(leadChargedHadrCand){
             get(dnn::tau_dz) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? leadChargedHadrCand->bestTrack()->dz() : default_value, 0.f, 0.0190f);
             const bool tau_dz_sig_valid = leadChargedHadrCand->bestTrack() != nullptr && std::isnormal(leadChargedHadrCand->bestTrack()->dz())
@@ -777,13 +783,10 @@ private:
             const double dzError = leadChargedHadrCand->bestTrack() != nullptr ? leadChargedHadrCand->dzError() : default_value;
             get(dnn::tau_dz_sig) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? std::abs(leadChargedHadrCand->bestTrack()->dz()) / dzError : default_value, 4.717f, 11.78f);
         }
-        // get(dnn::tau_flightLength_x) = getValueNorm(tau.flightLength().x(), -0.0003f, 0.7362f);
-        // get(dnn::tau_flightLength_y) = getValueNorm(tau.flightLength().y(), -0.0009f, 0.7354f);
-        // get(dnn::tau_flightLength_z) = getValueNorm(tau.flightLength().z(), -0.0022f, 1.993f);
+        get(dnn::tau_flightLength_x) = getValueNorm(impactParam.flightLength().x(), -0.0003f, 0.7362f);
+        get(dnn::tau_flightLength_y) = getValueNorm(impactParam.flightLength().y(), -0.0009f, 0.7354f);
+        get(dnn::tau_flightLength_z) = getValueNorm(impactParam.flightLength().z(), -0.0022f, 1.993f);
         //set to zero
-        get(dnn::tau_flightLength_x) = 0;
-        get(dnn::tau_flightLength_y) = 0;
-        get(dnn::tau_flightLength_z) = 0;
         // get(dnn::tau_flightLength_sig) = getValueNorm(tau.flightLengthSig(), -4.78f, 9.573f);
         get(dnn::tau_flightLength_sig) = 0.55756444; //This value is set due to a bug in the training
         get(dnn::tau_pt_weighted_deta_strip) = getValueLinear(reco::tau::pt_weighted_deta_strip(tau, tau.decayMode()), 0, 1, true);
@@ -1275,7 +1278,7 @@ private:
         checkInputs(inputs, is_inner ? "hadron_inner_block" : "hadron_outer_block", dnn::NumberOfInputs);
     }
 
-    static void calculateElectronClusterVars(const reco::Electron* ele, float& elecEe, float& elecEgamma)
+    static void calculateElectronClusterVars(const reco::RecoEcalCandidate* ele, float& elecEe, float& elecEgamma)
     {
         if(ele) {
             elecEe = elecEgamma = 0;
@@ -1390,11 +1393,11 @@ private:
         return abs_eta > 1.46 && abs_eta < 1.558;
     }
 
-    static const reco::Electron* findMatchedElectron(const reco::PFTau& tau, const ElectronCollection& electrons,
+    static const reco::RecoEcalCandidate* findMatchedElectron(const reco::PFTau& tau, const ElectronCollection& electrons,
                                                     double deltaR)
     {
         const double dR2 = deltaR*deltaR;
-        const reco::Electron* matched_ele = nullptr;
+        const reco::RecoEcalCandidate* matched_ele = nullptr;
         for(const auto& ele : electrons) {
             if(reco::deltaR2(tau.p4(), ele.p4()) < dR2 && (!matched_ele || matched_ele->pt() < ele.pt())) {
                 matched_ele = &ele;
@@ -1407,9 +1410,10 @@ private:
     edm::EDGetTokenT<ElectronCollection> electrons_token_;
     edm::EDGetTokenT<MuonCollection> muons_token_;
     edm::EDGetTokenT<double> rho_token_;
-    // edm::EDGetTokenT<TauDiscriminator> chargedIsoPtSum_inputToken;
-    // edm::EDGetTokenT<TauDiscriminator> neutralIsoPtSum_inputToken;
-    // edm::EDGetTokenT<TauDiscriminator> puCorrPtSum_inputToken;
+    edm::EDGetTokenT<reco::PFTauTIPAssociationRef> PFTauTransverseImpactParameters_token;
+    edm::EDGetTokenT<TauDiscriminator> chargedIsoPtSum_inputToken;
+    edm::EDGetTokenT<TauDiscriminator> neutralIsoPtSum_inputToken;
+    edm::EDGetTokenT<TauDiscriminator> puCorrPtSum_inputToken;
     std::string input_layer_, output_layer_;
     const unsigned version;
     const int debug_level;

@@ -25,7 +25,13 @@
 #include "DataFormats/TauReco/interface/PFTau.h"
 #include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
 #include "DataFormats/Candidate/interface/LeafCandidate.h"
+#include "DataFormats/RecoCandidate/interface/RecoEcalCandidate.h"
 #include "DataFormats/TrackReco/interface/HitPattern.h"
+#include "DataFormats/MuonReco/interface/MuonSelectors.h"
+#include "DataFormats/TauReco/interface/PFTauTransverseImpactParameterAssociation.h"
+#include "DataFormats/TauReco/interface/PFTauTransverseImpactParameter.h"
+#include "DataFormats/Common/interface/AssociationVector.h"
+#include "DataFormats/Common/interface/Association.h"
 
 
 
@@ -70,7 +76,8 @@ public:
     using TauRefProd = edm::RefProd<TauCollection>;
     //using ElectronCollection = pat::ElectronCollection;
     // using MuonCollection = pat::MuonCollection;
-    using ElectronCollection = reco::ElectronCollection;
+    //using ElectronCollection = reco::ElectronCollection;
+    using ElectronCollection = std::vector<reco::RecoEcalCandidate>;
     using MuonCollection = reco::MuonCollection;
     using LorentzVectorXYZ = ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>>;
     using Cutter = TauWPThreshold;
