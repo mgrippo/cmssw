@@ -379,8 +379,14 @@ public:
         desc.add<edm::InputTag>("rho", edm::InputTag("hltFixedGridRhoFastjetAll"));
         desc.add<edm::InputTag>("pfTauTransverseImpactParameters", edm::InputTag("hpsPFTauTransverseImpactParameters"));
         desc.add<edm::InputTag>("chargedIsoPtSum", edm::InputTag("chargedIsoPtSum"));
+        desc.add<edm::InputTag>("chargedIsoPtSumdR03", edm::InputTag("chargedIsoPtSumdR03"));
         desc.add<edm::InputTag>("neutralIsoPtSum", edm::InputTag("neutralIsoPtSum"));
+        desc.add<edm::InputTag>("neutralIsoPtSumdR03", edm::InputTag("neutralIsoPtSumdR03"));
         desc.add<edm::InputTag>("puCorrPtSum", edm::InputTag("puCorrPtSum"));
+        desc.add<edm::InputTag>("footprintCorrection", edm::InputTag("footprintCorrection"));
+        desc.add<edm::InputTag>("neutralIsoPtSumWeight", edm::InputTag("neutralIsoPtSumWeight"));
+        desc.add<edm::InputTag>("neutralIsoPtSumWeightdR03", edm::InputTag("neutralIsoPtSumWeightdR03"));
+        desc.add<edm::InputTag>("photonPtSumOutsideSignalCone", edm::InputTag("photonPtSumOutsideSignalCone"));
         desc.add<std::vector<std::string>>("graph_file", {"RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6.pb"});
         desc.add<bool>("mem_mapped", false);
         desc.add<unsigned>("version", 2);
@@ -409,10 +415,16 @@ public:
         electrons_token_(consumes<ElectronCollection>(cfg.getParameter<edm::InputTag>("electrons"))),
         muons_token_(consumes<MuonCollection>(cfg.getParameter<edm::InputTag>("muons"))),
         rho_token_(consumes<double>(cfg.getParameter<edm::InputTag>("rho"))),
-        PFTauTransverseImpactParameters_token(consumes<reco::PFTauTIPAssociationRef>(cfg.getParameter<edm::InputTag>("pfTauTransverseImpactParameters"))),
+        PFTauTransverseImpactParameters_token(consumes<edm::AssociationVector<reco::PFTauRefProd, std::vector<reco::PFTauTransverseImpactParameterRef>>>(cfg.getParameter<edm::InputTag>("pfTauTransverseImpactParameters"))),
         chargedIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("chargedIsoPtSum"))),
+        chargedIsoPtSumdR03_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("chargedIsoPtSumdR03"))),
         neutralIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("neutralIsoPtSum"))),
+        neutralIsoPtSumdR03_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("neutralIsoPtSumdR03"))),
         puCorrPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("puCorrPtSum"))),
+        footprintCorrection_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("footprintCorrection"))),
+        neutralIsoPtSumWeight_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("neutralIsoPtSumWeight"))),
+        neutralIsoPtSumWeightdR03_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("neutralIsoPtSumWeightdR03"))),
+        photonPtSumOutsideSignalCone_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("photonPtSumOutsideSignalCone"))),
         version(cfg.getParameter<unsigned>("version")),
         debug_level(cfg.getParameter<int>("debug_level")),
 	    disable_dxy_pca_(cfg.getParameter<bool>("disable_dxy_pca"))
@@ -554,18 +566,35 @@ private:
         edm::Handle<double> rho;
         event.getByToken(rho_token_, rho);
 
-        edm::Handle<reco::PFTauTIPAssociationRef> PFTauTransverseImpactParameters;
+        edm::Handle<edm::AssociationVector<reco::PFTauRefProd, std::vector<reco::PFTauTransverseImpactParameterRef>>> PFTauTransverseImpactParameters;
         event.getByToken(PFTauTransverseImpactParameters_token, PFTauTransverseImpactParameters);
 
         edm::Handle<TauDiscriminator> chargedIsoPtSum;
         event.getByToken(chargedIsoPtSum_inputToken, chargedIsoPtSum);
 
+        edm::Handle<TauDiscriminator> chargedIsoPtSumdR03;
+        event.getByToken(chargedIsoPtSumdR03_inputToken, chargedIsoPtSumdR03);
+
         edm::Handle<TauDiscriminator> neutralIsoPtSum;
         event.getByToken(neutralIsoPtSum_inputToken, neutralIsoPtSum);
+
+        edm::Handle<TauDiscriminator> neutralIsoPtSumdR03;
+        event.getByToken(neutralIsoPtSumdR03_inputToken, neutralIsoPtSumdR03);
 
         edm::Handle<TauDiscriminator> puCorrPtSum;
         event.getByToken(puCorrPtSum_inputToken, puCorrPtSum);
 
+        edm::Handle<TauDiscriminator> footprintCorrection;
+        event.getByToken(footprintCorrection_inputToken, footprintCorrection);
+
+        edm::Handle<TauDiscriminator> neutralIsoPtSumWeight;
+        event.getByToken(neutralIsoPtSumWeight_inputToken, neutralIsoPtSumWeight);
+
+        edm::Handle<TauDiscriminator> neutralIsoPtSumWeightdR03;
+        event.getByToken(neutralIsoPtSumWeightdR03_inputToken, neutralIsoPtSumWeightdR03);
+
+        edm::Handle<TauDiscriminator> photonPtSumOutsideSignalCone;
+        event.getByToken(photonPtSumOutsideSignalCone_inputToken, photonPtSumOutsideSignalCone);
 
 
         tensorflow::Tensor predictions(tensorflow::DT_FLOAT, { static_cast<int>(taus->size()),
@@ -574,7 +603,7 @@ private:
             std::vector<tensorflow::Tensor> pred_vector;
             reco::PFTauRef pfTauRef(taus, tau_index);
             if(version == 2)
-                getPredictionsV2(taus->at(tau_index), tau_index, pfTauRef, *electrons, *muons, *pfCands, vertices->at(0), *rho, pred_vector, PFTauTransverseImpactParameters, *chargedIsoPtSum, *neutralIsoPtSum, *puCorrPtSum);
+                getPredictionsV2(taus->at(tau_index), tau_index, pfTauRef, *electrons, *muons, *pfCands, vertices->at(0), *rho, pred_vector, PFTauTransverseImpactParameters, *chargedIsoPtSum, *chargedIsoPtSumdR03, *neutralIsoPtSum, *neutralIsoPtSumdR03, *puCorrPtSum, *footprintCorrection, *neutralIsoPtSumWeight, *neutralIsoPtSumWeightdR03, *photonPtSumOutsideSignalCone);
             else
                 throw cms::Exception("DeepTauId") << "version " << version << " is not supported.";
             for(int k = 0; k < deep_tau::NumberOfOutputs; ++k) {
@@ -592,9 +621,10 @@ private:
     void getPredictionsV2(const TauType& tau, size_t tau_index, reco::PFTauRef pfTauRef, const ElectronCollection& electrons,
                           const MuonCollection& muons, const std::vector<reco::PFCandidate>& pfCands,
                           const reco::Vertex& pv, double rho, std::vector<tensorflow::Tensor>& pred_vector,
-                          edm::Handle<reco::PFTauTIPAssociationRef> PFTauTransverseImpactParameters,
-                          const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& neutralIsoPtSum,
-                          const TauDiscriminator& puCorrPtSum)
+                          edm::Handle<edm::AssociationVector<reco::PFTauRefProd, std::vector<reco::PFTauTransverseImpactParameterRef>>> PFTauTransverseImpactParameters,
+                          const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& chargedIsoPtSumdR03, const TauDiscriminator& neutralIsoPtSum, const TauDiscriminator& neutralIsoPtSumdR03,
+                          const TauDiscriminator& puCorrPtSum, const TauDiscriminator& footprintCorrection,
+                          const TauDiscriminator& neutralIsoPtSumWeight, const TauDiscriminator& neutralIsoPtSumWeightdR03, const TauDiscriminator& photonPtSumOutsideSignalCone)
     {
         CellGrid inner_grid(dnn_inputs_2017_v2::number_of_inner_cell, dnn_inputs_2017_v2::number_of_inner_cell,
                             0.02, 0.02);
@@ -604,7 +634,7 @@ private:
         fillGrids(tau, muons, inner_grid, outer_grid);
         fillGrids(tau, pfCands, inner_grid, outer_grid);
 
-        createTauBlockInputs(tau, tau_index, pfTauRef, pv, rho, PFTauTransverseImpactParameters, chargedIsoPtSum, neutralIsoPtSum, puCorrPtSum);
+        createTauBlockInputs(tau, tau_index, pfTauRef, pv, rho, PFTauTransverseImpactParameters, chargedIsoPtSum, chargedIsoPtSumdR03, neutralIsoPtSum, neutralIsoPtSumdR03, puCorrPtSum, footprintCorrection, neutralIsoPtSumWeight, neutralIsoPtSumWeightdR03, photonPtSumOutsideSignalCone);
         createConvFeatures(tau, pv, rho, electrons, muons, pfCands, inner_grid, true);
         createConvFeatures(tau, pv, rho, electrons, muons, pfCands, outer_grid, false);
 
@@ -702,9 +732,10 @@ private:
     }
 
     void createTauBlockInputs(const TauType& tau, size_t tau_index, reco::PFTauRef pfTauRef, const reco::Vertex& pv, double rho,
-                              edm::Handle<reco::PFTauTIPAssociationRef> PFTauTransverseImpactParameters,
-                              const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& neutralIsoPtSum,
-                              const TauDiscriminator& puCorrPtSum)
+                              edm::Handle<edm::AssociationVector<reco::PFTauRefProd, std::vector<reco::PFTauTransverseImpactParameterRef>>> PFTauTransverseImpactParameters,
+                              const TauDiscriminator& chargedIsoPtSum, const TauDiscriminator& chargedIsoPtSumdR03, const TauDiscriminator& neutralIsoPtSum, const TauDiscriminator& neutralIsoPtSumdR03,
+                              const TauDiscriminator& puCorrPtSum, const TauDiscriminator& footprintCorrection,
+                              const TauDiscriminator& neutralIsoPtSumWeight, const TauDiscriminator& neutralIsoPtSumWeightdR03, const TauDiscriminator& photonPtSumOutsideSignalCone)
     {
         namespace dnn = dnn_inputs_2017_v2::TauBlockInputs;
 
@@ -725,26 +756,16 @@ private:
         get(dnn::tau_n_charged_prongs) = getValueLinear(tau.decayMode() / 5 + 1, 1, 3, true);
         get(dnn::tau_n_neutral_prongs) = getValueLinear(tau.decayMode() % 5, 0, 2, true);
 
-        // get(dnn::chargedIsoPtSumdR03_over_dR05) = getValue(tau.tauID("chargedIsoPtSumdR03") / tau.tauID("chargedIsoPtSum"));
-        // get(dnn::footprintCorrection) = getValueNorm(tau.tauID("footprintCorrectiondR03"), 9.029f, 26.42f);
-
-        // get(dnn::neutralIsoPtSumWeight_over_neutralIsoPtSum) =
-        //     getValue(tau.tauID("neutralIsoPtSumWeight") / tau.tauID("neutralIsoPtSum"));
-        // get(dnn::neutralIsoPtSumWeightdR03_over_neutralIsoPtSum) =
-        //     getValue(tau.tauID("neutralIsoPtSumWeightdR03") / tau.tauID("neutralIsoPtSum"));
-        // get(dnn::neutralIsoPtSumdR03_over_dR05) = getValue(tau.tauID("neutralIsoPtSumdR03") / tau.tauID("neutralIsoPtSum"));
-        // get(dnn::photonPtSumOutsideSignalCone) = getValueNorm(tau.tauID("photonPtSumOutsideSignalConedR03"), 1.731f, 6.846f);
-        //set temporary to zero
         //all params here: https://github.com/cms-sw/cmssw/blob/1d43ce3ab10966880bbac407c8d944fc7e3add42/PhysicsTools/PatAlgos/python/producersLayer1/tauProducer_cfi.py
-        //https://github.com/cms-sw/cmssw/blob/808a7f65d11ee25b76ec246b2baba00fad79fbaa/RecoTauTag/Configuration/python/HPSPFTaus_cff.py#L454 ---so??
+        //https://github.com/cms-sw/cmssw/blob/808a7f65d11ee25b76ec246b2baba00fad79fbaa/RecoTauTag/Configuration/python/HPSPFTaus_cff.py - definitions
         get(dnn::chargedIsoPtSum) = getValueNorm(chargedIsoPtSum.value(tau_index), 47.78f, 123.5f);
-        get(dnn::chargedIsoPtSumdR03_over_dR05) = 0;
-        get(dnn::footprintCorrection) = 0;
+        get(dnn::chargedIsoPtSumdR03_over_dR05) = getValue(chargedIsoPtSumdR03.value(tau_index) / chargedIsoPtSum.value(tau_index));
+        get(dnn::footprintCorrection) = getValueNorm(footprintCorrection.value(tau_index), 9.029f, 26.42f);
         get(dnn::neutralIsoPtSum) = getValueNorm(neutralIsoPtSum.value(tau_index), 57.59f, 155.3f);
-        get(dnn::neutralIsoPtSumWeight_over_neutralIsoPtSum) = 0;
-        get(dnn::neutralIsoPtSumWeightdR03_over_neutralIsoPtSum) = 0;
-        get(dnn::neutralIsoPtSumdR03_over_dR05) = 0;
-        get(dnn::photonPtSumOutsideSignalCone) = 0;
+        get(dnn::neutralIsoPtSumWeight_over_neutralIsoPtSum) = getValue(neutralIsoPtSumWeight.value(tau_index) / neutralIsoPtSum.value(tau_index));
+        get(dnn::neutralIsoPtSumWeightdR03_over_neutralIsoPtSum) = getValue(neutralIsoPtSumWeightdR03.value(tau_index) / neutralIsoPtSum.value(tau_index));
+        get(dnn::neutralIsoPtSumdR03_over_dR05) = getValue(neutralIsoPtSumdR03.value(tau_index) / neutralIsoPtSum.value(tau_index));
+        get(dnn::photonPtSumOutsideSignalCone) = getValueNorm(photonPtSumOutsideSignalCone.value(tau_index), 1.731f, 6.846f);
         get(dnn::puCorrPtSum) = getValueNorm(puCorrPtSum.value(tau_index), 22.38f, 16.34f);
 	// The global PCA coordinates were used as inputs during the NN training, but it was decided to disable
 	// them for the inference, because modeling of dxy_PCA in MC poorly describes the data, and x and y coordinates
@@ -765,16 +786,17 @@ private:
         }
         //https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookChapter9#AssocVecInt
         //const reco::PFTauTransverseImpactParameter& impactParam = (*(*PFTauTransverseImpactParameters))[pfTauRef];
-        auto impactParam = *(*PFTauTransverseImpactParameters)->second;
+        //auto impactParam = *(*PFTauTransverseImpactParameters).second;
+        auto impactParam = PFTauTransverseImpactParameters->value(tau_index);
 
-        const bool tau_ip3d_valid = std::isnormal(impactParam.ip3d()) && impactParam.ip3d() > - 10 && std::isnormal(impactParam.ip3d_error())
-            && impactParam.ip3d_error() > 0;
+        const bool tau_ip3d_valid = std::isnormal(impactParam->ip3d()) && impactParam->ip3d() > - 10 && std::isnormal(impactParam->ip3d_error())
+            && impactParam->ip3d_error() > 0;
 
         //https://github.com/cms-sw/cmssw/blob/2ba5d421e10379d81760a899532b2c991b89c82c/DataFormats/TauReco/interface/PFTauTransverseImpactParameter.h
         if(tau_ip3d_valid){
             get(dnn::tau_ip3d_valid) = tau_ip3d_valid;
-            get(dnn::tau_ip3d) = getValueNorm(impactParam.ip3d(), 0.0026f, 0.0114f);
-            get(dnn::tau_ip3d_sig) = getValueNorm(std::abs(impactParam.ip3d()) / impactParam.ip3d_error(), 2.928f, 4.466f);
+            get(dnn::tau_ip3d) = getValueNorm(impactParam->ip3d(), 0.0026f, 0.0114f);
+            get(dnn::tau_ip3d_sig) = getValueNorm(std::abs(impactParam->ip3d()) / impactParam->ip3d_error(), 2.928f, 4.466f);
         }
         if(leadChargedHadrCand){
             get(dnn::tau_dz) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? leadChargedHadrCand->bestTrack()->dz() : default_value, 0.f, 0.0190f);
@@ -784,9 +806,9 @@ private:
             const double dzError = leadChargedHadrCand->bestTrack() != nullptr ? leadChargedHadrCand->dzError() : default_value;
             get(dnn::tau_dz_sig) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? std::abs(leadChargedHadrCand->bestTrack()->dz()) / dzError : default_value, 4.717f, 11.78f);
         }
-        get(dnn::tau_flightLength_x) = getValueNorm(impactParam.flightLength().x(), -0.0003f, 0.7362f);
-        get(dnn::tau_flightLength_y) = getValueNorm(impactParam.flightLength().y(), -0.0009f, 0.7354f);
-        get(dnn::tau_flightLength_z) = getValueNorm(impactParam.flightLength().z(), -0.0022f, 1.993f);
+        get(dnn::tau_flightLength_x) = getValueNorm(impactParam->flightLength().x(), -0.0003f, 0.7362f);
+        get(dnn::tau_flightLength_y) = getValueNorm(impactParam->flightLength().y(), -0.0009f, 0.7354f);
+        get(dnn::tau_flightLength_z) = getValueNorm(impactParam->flightLength().z(), -0.0022f, 1.993f);
         //set to zero
         // get(dnn::tau_flightLength_sig) = getValueNorm(tau.flightLengthSig(), -4.78f, 9.573f);
         get(dnn::tau_flightLength_sig) = 0.55756444; //This value is set due to a bug in the training
@@ -795,25 +817,64 @@ private:
         get(dnn::tau_pt_weighted_dphi_strip) = getValueLinear(reco::tau::pt_weighted_dphi_strip(tau, tau.decayMode()), 0, 1, true);
         get(dnn::tau_pt_weighted_dr_signal) = getValueNorm(reco::tau::pt_weighted_dr_signal(tau, tau.decayMode()), 0.0052f, 0.01433f);
         get(dnn::tau_pt_weighted_dr_iso) = getValueLinear(reco::tau::pt_weighted_dr_iso(tau,tau.decayMode()), 0, 1, true);
-        //get(dnn::tau_leadingTrackNormChi2) = getValueNorm(tau.leadingTrackNormChi2(), 1.538f, 4.401f);
-        get(dnn::tau_leadingTrackNormChi2) = 0;
+        get(dnn::tau_leadingTrackNormChi2) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? leadChargedHadrCand->bestTrack()->normalizedChi2() : default_value, 1.538f, 4.401f);
         const auto eratio = reco::tau::eratio(tau);
         const bool tau_e_ratio_valid = std::isnormal(eratio) && eratio > 0.f;
         get(dnn::tau_e_ratio_valid) = tau_e_ratio_valid;
         get(dnn::tau_e_ratio) = tau_e_ratio_valid ? getValueLinear(eratio, 0, 1, true) : 0.f;
-        //const double gj_angle_diff = calculateGottfriedJacksonAngleDifference(tau);
-        //const bool tau_gj_angle_diff_valid = (std::isnormal(gj_angle_diff) || gj_angle_diff == 0) && gj_angle_diff >= 0;
-        //get(dnn::tau_gj_angle_diff_valid) = tau_gj_angle_diff_valid;
-        //get(dnn::tau_gj_angle_diff) = tau_gj_angle_diff_valid ? getValueLinear(gj_angle_diff, 0, pi, true) : 0;
-        get(dnn::tau_gj_angle_diff_valid) = false;
-        get(dnn::tau_gj_angle_diff) = 0;
+        const double gj_angle_diff = calculateGottfriedJacksonAngleDifference(tau,impactParam);
+        const bool tau_gj_angle_diff_valid = (std::isnormal(gj_angle_diff) || gj_angle_diff == 0) && gj_angle_diff >= 0;
+        get(dnn::tau_gj_angle_diff_valid) = tau_gj_angle_diff_valid;
+        get(dnn::tau_gj_angle_diff) = tau_gj_angle_diff_valid ? getValueLinear(gj_angle_diff, 0, pi, true) : 0;
+
         get(dnn::tau_n_photons) = getValueNorm(reco::tau::n_photons_total(tau), 2.95f, 3.927f);
-        // get(dnn::tau_emFraction) = getValueLinear(tau.emFraction_MVA(), -1, 1, false);
-        get(dnn::tau_emFraction) = 0;
+
+        float emFraction = -1.;
+        float myHCALenergy = 0.;
+        float myECALenergy = 0.;
+        if(leadChargedHadrCand && leadChargedHadrCand->bestTrack() != nullptr){
+            for (const auto& isoPFCand : tau.isolationPFCands()) {
+                  myHCALenergy += isoPFCand->hcalEnergy();
+                  myECALenergy += isoPFCand->ecalEnergy();
+            }
+            for (const auto& signalPFCand : tau.signalPFCands()) {
+                myHCALenergy += signalPFCand->hcalEnergy();
+                myECALenergy += signalPFCand->ecalEnergy();
+            }
+            if (myHCALenergy + myECALenergy != 0.) {
+              emFraction = myECALenergy / (myHCALenergy + myECALenergy);
+            }
+        }
+
+        get(dnn::tau_emFraction) = getValueLinear(emFraction, -1, 1, false);
         get(dnn::tau_inside_ecal_crack) = getValue(isInEcalCrack(tau.p4().eta()));
-        // get(dnn::leadChargedCand_etaAtEcalEntrance_minus_tau_eta) =
-        //     getValueNorm(tau.etaAtEcalEntranceLeadChargedCand() - tau.p4().eta(), 0.0042f, 0.0323f);
-        get(dnn::leadChargedCand_etaAtEcalEntrance_minus_tau_eta) = 0;
+        const std::vector<reco::CandidatePtr>& signalCands = tau.signalCands();
+        float leadChargedCandPt = -99;
+        float leadChargedCandEtaAtEcalEntrance = -99;
+        for (const auto& it : signalCands) {
+            const reco::PFCandidate* icand = dynamic_cast<const reco::PFCandidate*>(it.get());
+            if (icand != nullptr) {
+                  const reco::Track* track = nullptr;
+                  if (icand->trackRef().isNonnull())
+                    track = icand->trackRef().get();
+                  else if (icand->muonRef().isNonnull() && icand->muonRef()->innerTrack().isNonnull())
+                    track = icand->muonRef()->innerTrack().get();
+                  else if (icand->muonRef().isNonnull() && icand->muonRef()->globalTrack().isNonnull())
+                    track = icand->muonRef()->globalTrack().get();
+                  else if (icand->muonRef().isNonnull() && icand->muonRef()->outerTrack().isNonnull())
+                    track = icand->muonRef()->outerTrack().get();
+                  else if (icand->gsfTrackRef().isNonnull())
+                    track = icand->gsfTrackRef().get();
+                  if (track) {
+                    if (track->pt() > leadChargedCandPt) {
+                      leadChargedCandEtaAtEcalEntrance = icand->positionAtECALEntrance().eta();
+                      leadChargedCandPt = track->pt();
+                    }
+                  }
+            }
+        }
+        get(dnn::leadChargedCand_etaAtEcalEntrance_minus_tau_eta) =
+            getValueNorm(leadChargedCandEtaAtEcalEntrance - tau.p4().eta(), 0.0042f, 0.0323f);
 
         checkInputs(inputs, "tau_block",  dnn::NumberOfInputs);
     }
@@ -1360,30 +1421,30 @@ private:
     }
 
      // Copied from https://github.com/cms-sw/cmssw/blob/CMSSW_9_4_X/RecoTauTag/RecoTau/plugins/PATTauDiscriminationByMVAIsolationRun2.cc#L218
-    static bool calculateGottfriedJacksonAngleDifference(const reco::PFTau& tau, double& gj_diff)
+    static bool calculateGottfriedJacksonAngleDifference(const reco::PFTau& tau, reco::PFTauTransverseImpactParameterRef impactParam, double& gj_diff)
     {
-        // if(tau.hasSecondaryVertex()) {
-        //     static constexpr double mTau = 1.77682;
-        //     const double mAOne = tau.p4().M();
-        //     const double pAOneMag = tau.p();
-        //     const double argumentThetaGJmax = (std::pow(mTau,2) - std::pow(mAOne,2) ) / ( 2 * mTau * pAOneMag );
-        //     // const double argumentThetaGJmeasured = tau.p4().Vect().Dot(tau.flightLength())
-        //     //         / ( pAOneMag * tau.flightLength().R() );
-        //     const double argumentThetaGJmeasured = 0;
-        //     if ( std::abs(argumentThetaGJmax) <= 1. && std::abs(argumentThetaGJmeasured) <= 1. ) {
-        //         double thetaGJmax = std::asin( argumentThetaGJmax );
-        //         double thetaGJmeasured = std::acos( argumentThetaGJmeasured );
-        //         gj_diff = thetaGJmeasured - thetaGJmax;
-        //         return true;
-        //     }
-        // }
+        if(impactParam->hasSecondaryVertex()) {
+            static constexpr double mTau = 1.77682;
+            const double mAOne = tau.p4().M();
+            const double pAOneMag = tau.p();
+            const double argumentThetaGJmax = (std::pow(mTau,2) - std::pow(mAOne,2) ) / ( 2 * mTau * pAOneMag );
+            // const double argumentThetaGJmeasured = tau.p4().Vect().Dot(tau.flightLength())
+            //         / ( pAOneMag * tau.flightLength().R() );
+            const double argumentThetaGJmeasured = 0;
+            if ( std::abs(argumentThetaGJmax) <= 1. && std::abs(argumentThetaGJmeasured) <= 1. ) {
+                double thetaGJmax = std::asin( argumentThetaGJmax );
+                double thetaGJmeasured = std::acos( argumentThetaGJmeasured );
+                gj_diff = thetaGJmeasured - thetaGJmax;
+                return true;
+            }
+        }
         return false;
     }
 
-    static float calculateGottfriedJacksonAngleDifference(const reco::PFTau& tau)
+    static float calculateGottfriedJacksonAngleDifference(const reco::PFTau& tau, reco::PFTauTransverseImpactParameterRef impactParam)
     {
         double gj_diff;
-        if(calculateGottfriedJacksonAngleDifference(tau, gj_diff))
+        if(calculateGottfriedJacksonAngleDifference(tau, impactParam, gj_diff))
             return static_cast<float>(gj_diff);
         return default_value;
     }
@@ -1411,10 +1472,16 @@ private:
     edm::EDGetTokenT<ElectronCollection> electrons_token_;
     edm::EDGetTokenT<MuonCollection> muons_token_;
     edm::EDGetTokenT<double> rho_token_;
-    edm::EDGetTokenT<reco::PFTauTIPAssociationRef> PFTauTransverseImpactParameters_token;
+    edm::EDGetTokenT<edm::AssociationVector<reco::PFTauRefProd, std::vector<reco::PFTauTransverseImpactParameterRef>>> PFTauTransverseImpactParameters_token;
     edm::EDGetTokenT<TauDiscriminator> chargedIsoPtSum_inputToken;
+    edm::EDGetTokenT<TauDiscriminator> chargedIsoPtSumdR03_inputToken;
     edm::EDGetTokenT<TauDiscriminator> neutralIsoPtSum_inputToken;
+    edm::EDGetTokenT<TauDiscriminator> neutralIsoPtSumdR03_inputToken;
     edm::EDGetTokenT<TauDiscriminator> puCorrPtSum_inputToken;
+    edm::EDGetTokenT<TauDiscriminator> footprintCorrection_inputToken;
+    edm::EDGetTokenT<TauDiscriminator> neutralIsoPtSumWeight_inputToken;
+    edm::EDGetTokenT<TauDiscriminator> neutralIsoPtSumWeightdR03_inputToken;
+    edm::EDGetTokenT<TauDiscriminator> photonPtSumOutsideSignalCone_inputToken;
     std::string input_layer_, output_layer_;
     const unsigned version;
     const int debug_level;
