@@ -377,7 +377,7 @@ public:
         desc.add<edm::InputTag>("pfcands", edm::InputTag("packedPFCandidates"));
         desc.add<edm::InputTag>("vertices", edm::InputTag("offlineSlimmedPrimaryVertices"));
         desc.add<edm::InputTag>("rho", edm::InputTag("hltFixedGridRhoFastjetAll"));
-        desc.add<edm::InputTag>("PFTauTransverseImpactParameters", edm::InputTag("hpsPFTauTransverseImpactParameters"));
+        desc.add<edm::InputTag>("pfTauTransverseImpactParameters", edm::InputTag("hpsPFTauTransverseImpactParameters"));
         desc.add<edm::InputTag>("chargedIsoPtSum", edm::InputTag("chargedIsoPtSum"));
         desc.add<edm::InputTag>("neutralIsoPtSum", edm::InputTag("neutralIsoPtSum"));
         desc.add<edm::InputTag>("puCorrPtSum", edm::InputTag("puCorrPtSum"));
@@ -409,7 +409,7 @@ public:
         electrons_token_(consumes<ElectronCollection>(cfg.getParameter<edm::InputTag>("electrons"))),
         muons_token_(consumes<MuonCollection>(cfg.getParameter<edm::InputTag>("muons"))),
         rho_token_(consumes<double>(cfg.getParameter<edm::InputTag>("rho"))),
-        PFTauTransverseImpactParameters_token(consumes<reco::PFTauTIPAssociationRef>(cfg.getParameter<edm::InputTag>("PFTauTransverseImpactParameters"))),
+        PFTauTransverseImpactParameters_token(consumes<reco::PFTauTIPAssociationRef>(cfg.getParameter<edm::InputTag>("pfTauTransverseImpactParameters"))),
         chargedIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("chargedIsoPtSum"))),
         neutralIsoPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("neutralIsoPtSum"))),
         puCorrPtSum_inputToken(consumes<TauDiscriminator>(cfg.getParameter<edm::InputTag>("puCorrPtSum"))),
@@ -763,8 +763,9 @@ private:
             get(dnn::tau_dxy) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? leadChargedHadrCand->bestTrack()->dxy() : default_value, 0.0018f, 0.0085f);
             get(dnn::tau_dxy_sig) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? std::abs(leadChargedHadrCand->bestTrack()->dxy())/tau.dxyError() : default_value, 2.26f, 4.191f);
         }
-
-        const reco::PFTauTransverseImpactParameter& impactParam = (*(*PFTauTransverseImpactParameters))[pfTauRef];
+        //https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookChapter9#AssocVecInt
+        //const reco::PFTauTransverseImpactParameter& impactParam = (*(*PFTauTransverseImpactParameters))[pfTauRef];
+        auto impactParam = *(*PFTauTransverseImpactParameters)->second;
 
         const bool tau_ip3d_valid = std::isnormal(impactParam.ip3d()) && impactParam.ip3d() > - 10 && std::isnormal(impactParam.ip3d_error())
             && impactParam.ip3d_error() > 0;

@@ -29,6 +29,7 @@
 #include "DataFormats/TrackReco/interface/HitPattern.h"
 #include "DataFormats/MuonReco/interface/MuonSelectors.h"
 #include "DataFormats/TauReco/interface/PFTauTransverseImpactParameterAssociation.h"
+#include "DataFormats/TauReco/interface/PFTauTransverseImpactParameterFwd.h"
 #include "DataFormats/TauReco/interface/PFTauTransverseImpactParameter.h"
 #include "DataFormats/Common/interface/AssociationVector.h"
 #include "DataFormats/Common/interface/Association.h"
