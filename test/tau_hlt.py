@@ -11,6 +11,10 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing('analysis')
 options.register('wantSummary', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Print run summary at the end of the job.")
+options.register('isMC', True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "Define if the sample is MC")
+options.register('requireGenMatch', True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "Store only taus/jets that have GenLeptonMatch or GenQcdMatch.")
 options.parseArguments()
 
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
@@ -33,7 +37,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(500)
+    input = cms.untracked.int32(200)
 )
 
 # Input source
@@ -77,7 +81,7 @@ process.configurationMetadata = cms.untracked.PSet(
 )
 
 # Output definition
-process.TFileService = cms.Service('TFileService', fileName=cms.string("deepTauTuple_DY.root"))
+process.TFileService = cms.Service('TFileService', fileName=cms.string("deepTauTuple.root"))
 
 # Additional output definition
 
@@ -104,7 +108,7 @@ associatePatAlgosToolsTask(process)
 from HLTrigger.Configuration.myTauHLT import update
 
 #call to customisation function update imported from HLTrigger.Configuration.myTauHLT
-process = update(process,options.wantSummary)
+process = update(process,options.wantSummary,options.isMC,options.requireGenMatch)
 
 # Automatic addition of the customisation function from HLTrigger.Configuration.customizeHLTforMC
 from HLTrigger.Configuration.customizeHLTforMC import customizeHLTforMC

@@ -11,6 +11,10 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing('analysis')
 options.register('wantSummary', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Print run summary at the end of the job.")
+options.register('isMC', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "Define if the sample is MC")
+options.register('requireGenMatch', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "Store only taus/jets that have GenLeptonMatch or GenQcdMatch.")
 options.parseArguments()
 
 

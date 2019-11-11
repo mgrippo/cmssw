@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 import TauTriggerTools.Common
 
-def update(process,summary):
+def update(process,summary,isMC,requireGenMatch):
 	process.options.wantSummary = cms.untracked.bool(summary)
 
 	process.genFilter = cms.EDFilter("GenTauFilter",
@@ -13,4 +13,7 @@ def update(process,summary):
 	#process.genFilterPath = cms.Path(process.genFilter)
 	#process.schedule.insert(0, process.genFilterPath)
 	#process.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4.insert(0, process.genFilter)
+
+	process.tauTupleProducer.isMC = isMC
+	process.tauTupleProducer.requireGenMatch = requireGenMatch
 	return process

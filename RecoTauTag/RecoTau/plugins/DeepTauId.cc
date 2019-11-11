@@ -778,18 +778,19 @@ private:
     	  get(dnn::tau_dxy_pca_y) = 0;
     	  get(dnn::tau_dxy_pca_z) = 0;
 
-        const bool tau_dxy_valid = leadChargedHadrCand->bestTrack() != nullptr && std::isnormal(leadChargedHadrCand->bestTrack()->dxy()) && leadChargedHadrCand->bestTrack()->dxy() > - 10 && std::isnormal(tau.dxyError())
-            && tau.dxyError() > 0;
+          auto impactParam = PFTauTransverseImpactParameters->value(tau_index);
+
+        const bool tau_dxy_valid = std::isnormal(impactParam->dxy()) && impactParam->dxy() > - 10 && std::isnormal(impactParam->dxy_error())
+            && impactParam->dxy_error() > 0;
         if(tau_dxy_valid){
             get(dnn::tau_dxy_valid) = tau_dxy_valid;
 
-            get(dnn::tau_dxy) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? leadChargedHadrCand->bestTrack()->dxy() : 0, 0.0018f, 0.0085f);
-            get(dnn::tau_dxy_sig) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? std::abs(leadChargedHadrCand->bestTrack()->dxy())/tau.dxyError() : 0, 2.26f, 4.191f);
+            get(dnn::tau_dxy) = getValueNorm(impactParam->dxy(), 0.0018f, 0.0085f);
+            get(dnn::tau_dxy_sig) = getValueNorm(impactParam->dxy()/impactParam->dxy_error(), 2.26f, 4.191f);
         }
         //https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookChapter9#AssocVecInt
         //const reco::PFTauTransverseImpactParameter& impactParam = (*(*PFTauTransverseImpactParameters))[pfTauRef];
         //auto impactParam = *(*PFTauTransverseImpactParameters).second;
-        auto impactParam = PFTauTransverseImpactParameters->value(tau_index);
 
         const bool tau_ip3d_valid = std::isnormal(impactParam->ip3d()) && impactParam->ip3d() > - 10 && std::isnormal(impactParam->ip3d_error())
             && impactParam->ip3d_error() > 0;
@@ -819,7 +820,7 @@ private:
         get(dnn::tau_pt_weighted_dphi_strip) = getValueLinear(reco::tau::pt_weighted_dphi_strip(tau, tau.decayMode()), 0, 1, true);
         get(dnn::tau_pt_weighted_dr_signal) = getValueNorm(reco::tau::pt_weighted_dr_signal(tau, tau.decayMode()), 0.0052f, 0.01433f);
         get(dnn::tau_pt_weighted_dr_iso) = getValueLinear(reco::tau::pt_weighted_dr_iso(tau,tau.decayMode()), 0, 1, true);
-        get(dnn::tau_leadingTrackNormChi2) = getValueNorm(leadChargedHadrCand->bestTrack() != nullptr ? leadChargedHadrCand->bestTrack()->normalizedChi2() : 0, 1.538f, 4.401f);
+        get(dnn::tau_leadingTrackNormChi2) = getValueNorm(reco::tau::lead_track_chi2(tau), 1.538f, 4.401f);
         const auto eratio = reco::tau::eratio(tau);
         const bool tau_e_ratio_valid = std::isnormal(eratio) && eratio > 0.f;
         get(dnn::tau_e_ratio_valid) = tau_e_ratio_valid;
