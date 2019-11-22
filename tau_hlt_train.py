@@ -2,7 +2,7 @@
 # using:
 # Revision: 1.19
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v
-# with command line options: tau_hlt --python_filename tau_hlt.py --customise=HLTrigger/Configuration/myTauHLT.update --step=DIGI,L1,DIGI2RAW,HLT:User --mc --no_exec --conditions auto:run2_mc_GRun --era=Run2_2018 --no_output -n 10 --filein /store/mc/RunIIFall18wmLHEGS/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM/102X_upgrade2018_realistic_v11-v1/120000/D9393C36-D02E-8C44-948C-D50E889C6690.root
+# with command line options: tau_hlt_train --python_filename tau_hlt_train.py --customise=HLTrigger/Configuration/myTauHLT_train.update --step=DIGI,L1,DIGI2RAW,HLT:User --mc --no_exec --conditions auto:run2_mc_GRun --era=Run2_2018 --no_output -n 10 --filein /store/mc/RunIIFall18wmLHEGS/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM/102X_upgrade2018_realistic_v11-v1/120000/D9393C36-D02E-8C44-948C-D50E889C6690.root
 import FWCore.ParameterSet.Config as cms
 import os
 import re
@@ -32,22 +32,21 @@ process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.Digi_cff')
 process.load('Configuration.StandardSequences.SimL1Emulator_cff')
 process.load('Configuration.StandardSequences.DigiToRaw_cff')
-process.load('HLTrigger.Configuration.HLT_User_cff')
+#process.load('HLTrigger.Configuration.HLT_Train_new_cff')
+process.load('HLTrigger.Configuration.HLT_User3_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(200)
+    input = cms.untracked.int32(100)
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
     dropDescendantsOfDroppedBranches = cms.untracked.bool(False),
     #fileNames = cms.untracked.vstring('/store/mc/RunIIFall18wmLHEGS/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM/102X_upgrade2018_realistic_v11-v1/120000/D9393C36-D02E-8C44-948C-D50E889C6690.root'),
-    fileNames = cms.untracked.vstring('file:CB85D3F3-2030-3D4F-B9B7-909839DA4DF2.root'), #DY
-    #fileNames = cms.untracked.vstring('file:QCD_Flat2018/E5D56C69-64AE-BC4A-9371-2C5649C4DBC9.root'), #QCD
-    #fileNames = cms.untracked.vstring('/store/mc/RunIISpring18DR/VBFHToTauTau_M125_13TeV_powheg_pythia8/GEN-SIM-RAW/NZSPU28to70_100X_upgrade2018_realistic_v10-v1/90000/66915846-3E2D-E811-9E98-FA163EBBACB2.root'),
-    #skipEvents=cms.untracked.uint32(510),
+    #fileNames = cms.untracked.vstring('file:CB85D3F3-2030-3D4F-B9B7-909839DA4DF2.root'), #DY
+    fileNames = cms.untracked.vstring('file:00CAF27C-A02C-E811-BC5C-02163E01770D.root'), #VBF
     inputCommands = cms.untracked.vstring(
         'keep *',
         'drop *_genParticles_*_*',
@@ -76,13 +75,13 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('tau_hlt nevts:10'),
+    annotation = cms.untracked.string('tau_hlt_train nevts:10'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
 
 # Output definition
-process.TFileService = cms.Service('TFileService', fileName=cms.string("deepTau_performance.root"))
+process.TFileService = cms.Service('TFileService', fileName=cms.string("deepTauTuple_tuple.root"))
 
 # Additional output definition
 
@@ -105,10 +104,10 @@ associatePatAlgosToolsTask(process)
 
 # customisation of the process.
 
-# Automatic addition of the customisation function from HLTrigger.Configuration.myTauHLT
-from HLTrigger.Configuration.myTauHLT import update
+# Automatic addition of the customisation function from HLTrigger.Configuration.myTauHLT_train
+from HLTrigger.Configuration.myTauHLT_train import update
 
-#call to customisation function update imported from HLTrigger.Configuration.myTauHLT
+#call to customisation function update imported from HLTrigger.Configuration.myTauHLT_train
 process = update(process,options.wantSummary,options.isMC,options.requireGenMatch)
 
 # Automatic addition of the customisation function from HLTrigger.Configuration.customizeHLTforMC
@@ -125,5 +124,3 @@ process = customizeHLTforMC(process)
 from Configuration.StandardSequences.earlyDeleteSettings_cff import customiseEarlyDelete
 process = customiseEarlyDelete(process)
 # End adding early deletion
-
-#print process.dumpPython()

@@ -14,12 +14,15 @@ This file is part of https://github.com/cms-tau-pog/TauTriggerTools. */
     VAR(UInt_t, run) /* run number */ \
     VAR(UInt_t, lumi) /* lumi section */ \
     VAR(ULong64_t, evt) /* event number */ \
+    VAR(Int_t, npv) /* number of primary vertices */ \
+    VAR(Float_t, npu) /* number of in-time pu interactions added to the event */ \
     VAR(std::vector<Float_t>, tau_pt) /* pt of the tau */ \
     VAR(std::vector<Float_t>, tau_mediumIsoAbs) /* medium PF iso abs for hadronic Tau */ \
     VAR(std::vector<Float_t>, tau_mediumIsoRel) /* medium PF iso rel for hadronic Tau */ \
     VAR(std::vector<Float_t>, deepTau_VSe) /* deepTau_VSe raw discriminator */ \
     VAR(std::vector<Float_t>, deepTau_VSmu) /* deepTau_VSmu raw discriminator */ \
     VAR(std::vector<Float_t>, deepTau_VSjet) /* deepTau_VSjet raw discriminator */ \
+    VAR(std::vector<Int_t>, tau_decayModeFindingNewDMs) /* new decayMode for tau */ \
     /**/
 
 #define VAR(type, name) DECLARE_BRANCH_VARIABLE(type, name)

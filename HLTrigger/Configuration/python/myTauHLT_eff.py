@@ -14,9 +14,15 @@ def update(process,summary):
 	process.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4.insert(0, process.genFilter)
 
 	process.initialFilter.store_hist = cms.bool(True)
+	process.initialFilter.isMC = cms.bool(True)
+
+	process.afterL1Filter.store_hist = cms.bool(True)
+	process.afterL1Filter.isMC = cms.bool(True)
 
 	process.intermidiateFilter.store_hist = cms.bool(True)
+	process.intermidiateFilter.isMC = cms.bool(True)
 
 	process.finalFilter.store_hist = cms.bool(False)
+	process.finalFilter.isMC = cms.bool(True)
 
 	return process

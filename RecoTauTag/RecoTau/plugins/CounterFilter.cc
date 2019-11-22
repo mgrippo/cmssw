@@ -27,6 +27,7 @@ public:
     using TauDiscriminator = reco::PFTauDiscriminator;
 
     CounterFilter(const edm::ParameterSet& cfg) :
+        isMC(cfg.getParameter<bool>("isMC")),
         store_hist(cfg.getParameter<bool>("store_hist")),
         position(cfg.getParameter<std::string>("position")),
         deepTauVSe_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("deepTauVSe"))),
@@ -34,7 +35,10 @@ public:
         deepTauVSjet_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("deepTauVSjet"))),
         mediumIsoAbs_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("mediumIsoAbs"))),
         mediumIsoRel_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("mediumIsoRel"))),
-        taus_token(mayConsume<std::vector<reco::PFTau>>(cfg.getParameter<edm::InputTag>("taus")))
+        taus_token(mayConsume<std::vector<reco::PFTau>>(cfg.getParameter<edm::InputTag>("taus"))),
+        puInfo_token(mayConsume<std::vector<PileupSummaryInfo>>(cfg.getParameter<edm::InputTag>("puInfo"))),
+        vertices_token(mayConsume<std::vector<reco::Vertex> >(cfg.getParameter<edm::InputTag>("vertices"))),
+        decayMode_token(consumes<reco::PFTauDiscriminator>(cfg.getParameter<edm::InputTag>("decayModeFindingNewDM")))
     {
         std::string full_name = position+"_counter";
         if(store_hist){
@@ -50,14 +54,15 @@ private:
     virtual bool filter(edm::Event& event, const edm::EventSetup&) override
     {
         bool result = true;
-        (*counterTuple)().run  = event.id().run();
-        (*counterTuple)().lumi = event.id().luminosityBlock();
-        (*counterTuple)().evt  = event.id().event();
 
         if(store_hist){
             counter->Fill(1);
         }
         else{
+            edm::Handle<std::vector<reco::Vertex>> vertices;
+            event.getByToken(vertices_token, vertices);
+            (*counterTuple)().npv = static_cast<int>(vertices->size());
+
             edm::Handle<TauDiscriminator> deepTau_VSe;
             event.getByToken(deepTauVSe_inputToken, deepTau_VSe);
 
@@ -75,6 +80,20 @@ private:
 
             edm::Handle<std::vector<reco::PFTau>> taus;
             event.getByToken(taus_token, taus);
+
+            edm::Handle<reco::PFTauDiscriminator> decayModesNew;
+            event.getByToken(decayMode_token, decayModesNew);
+
+            if(isMC) {
+                edm::Handle<std::vector<PileupSummaryInfo>> puInfo;
+                event.getByToken(puInfo_token, puInfo);
+                (*counterTuple)().npu = analysis::gen_truth::GetNumberOfPileUpInteractions(puInfo);
+            }
+
+            (*counterTuple)().run  = event.id().run();
+            (*counterTuple)().lumi = event.id().luminosityBlock();
+            (*counterTuple)().evt  = event.id().event();
+
             for(size_t tau_index = 0; tau_index < taus->size(); ++tau_index) {
                 const reco::PFTau& tau = taus->at(tau_index);
 
@@ -85,6 +104,7 @@ private:
                 (*counterTuple)().deepTau_VSe.push_back(static_cast<float>(deepTau_VSe->value(tau_index)));
                 (*counterTuple)().deepTau_VSmu.push_back(static_cast<float>(deepTau_VSmu->value(tau_index)));
                 (*counterTuple)().deepTau_VSjet.push_back(static_cast<float>(deepTau_VSjet->value(tau_index)));
+                (*counterTuple)().tau_decayModeFindingNewDMs.push_back(decayModesNew->value(tau_index));
 
                 counterTuple->Fill();
             }
@@ -97,14 +117,14 @@ private:
     {
         if(store_hist){
             //counter->Write();
-            &edm::Service<TFileService>()->file().WriteTObject(*counter);
+            edm::Service<TFileService>()->file().WriteTObject(counter.get());
         }
         else
             counterTuple->Write();
     }
 
 private:
-    const bool store_hist;
+    const bool isMC, store_hist;
     std::string position;
     const edm::EDGetTokenT<TauDiscriminator> deepTauVSe_inputToken;
     const edm::EDGetTokenT<TauDiscriminator> deepTauVSmu_inputToken;
@@ -112,6 +132,9 @@ private:
     const edm::EDGetTokenT<TauDiscriminator> mediumIsoAbs_inputToken;
     const edm::EDGetTokenT<TauDiscriminator> mediumIsoRel_inputToken;
     edm::EDGetTokenT<std::vector<reco::PFTau>> taus_token;
+    edm::EDGetTokenT<std::vector<PileupSummaryInfo>> puInfo_token;
+    edm::EDGetTokenT<std::vector<reco::Vertex>> vertices_token;
+    edm::EDGetTokenT<reco::PFTauDiscriminator> decayMode_token;
     std::shared_ptr<TH1F> counter;
     std::shared_ptr<counter_tau::CounterTuple> counterTuple;
 

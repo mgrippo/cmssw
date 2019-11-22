@@ -15,7 +15,7 @@ options.parseArguments()
 
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
 
-process = cms.Process('HLT',Run2_2018)
+process = cms.Process('HLTmc',Run2_2018)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
@@ -33,7 +33,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(20)
+    input = cms.untracked.int32(3000)
 )
 
 # Input source
