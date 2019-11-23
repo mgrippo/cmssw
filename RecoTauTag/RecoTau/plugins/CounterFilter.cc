@@ -35,6 +35,10 @@ public:
         deepTauVSjet_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("deepTauVSjet"))),
         mediumIsoAbs_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("mediumIsoAbs"))),
         mediumIsoRel_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("mediumIsoRel"))),
+        looseIsoAbs_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("looseIsoAbs"))),
+        looseIsoRel_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("looseIsoRel"))),
+        tightIsoAbs_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("tightIsoAbs"))),
+        tightIsoRel_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("tightIsoRel"))),
         taus_token(mayConsume<std::vector<reco::PFTau>>(cfg.getParameter<edm::InputTag>("taus"))),
         puInfo_token(mayConsume<std::vector<PileupSummaryInfo>>(cfg.getParameter<edm::InputTag>("puInfo"))),
         vertices_token(mayConsume<std::vector<reco::Vertex> >(cfg.getParameter<edm::InputTag>("vertices"))),
@@ -78,6 +82,18 @@ private:
             edm::Handle<TauDiscriminator> mediumIsoRel;
             event.getByToken(mediumIsoRel_inputToken, mediumIsoRel);
 
+            edm::Handle<TauDiscriminator> looseIsoAbs;
+            event.getByToken(looseIsoAbs_inputToken, looseIsoAbs);
+
+            edm::Handle<TauDiscriminator> looseIsoRel;
+            event.getByToken(looseIsoRel_inputToken, looseIsoRel);
+
+            edm::Handle<TauDiscriminator> tightIsoAbs;
+            event.getByToken(tightIsoAbs_inputToken, tightIsoAbs);
+
+            edm::Handle<TauDiscriminator> tightIsoRel;
+            event.getByToken(tightIsoRel_inputToken, tightIsoRel);
+
             edm::Handle<std::vector<reco::PFTau>> taus;
             event.getByToken(taus_token, taus);
 
@@ -98,16 +114,22 @@ private:
                 const reco::PFTau& tau = taus->at(tau_index);
 
                 (*counterTuple)().tau_pt.push_back(static_cast<float>(tau.polarP4().pt()));
+                (*counterTuple)().tau_eta.push_back(static_cast<float>(tau.polarP4().eta()));
                 (*counterTuple)().tau_mediumIsoAbs.push_back(static_cast<float>(mediumIsoAbs->value(tau_index)));
                 (*counterTuple)().tau_mediumIsoRel.push_back(static_cast<float>(mediumIsoRel->value(tau_index)));
+                (*counterTuple)().tau_looseIsoAbs.push_back(static_cast<float>(looseIsoAbs->value(tau_index)));
+                (*counterTuple)().tau_looseIsoRel.push_back(static_cast<float>(looseIsoRel->value(tau_index)));
+                (*counterTuple)().tau_tightIsoAbs.push_back(static_cast<float>(tightIsoAbs->value(tau_index)));
+                (*counterTuple)().tau_tightIsoRel.push_back(static_cast<float>(tightIsoRel->value(tau_index)));
 
                 (*counterTuple)().deepTau_VSe.push_back(static_cast<float>(deepTau_VSe->value(tau_index)));
                 (*counterTuple)().deepTau_VSmu.push_back(static_cast<float>(deepTau_VSmu->value(tau_index)));
                 (*counterTuple)().deepTau_VSjet.push_back(static_cast<float>(deepTau_VSjet->value(tau_index)));
                 (*counterTuple)().tau_decayModeFindingNewDMs.push_back(decayModesNew->value(tau_index));
 
-                counterTuple->Fill();
             }
+
+            counterTuple->Fill();
         }
 
         return result;
@@ -131,6 +153,10 @@ private:
     const edm::EDGetTokenT<TauDiscriminator> deepTauVSjet_inputToken;
     const edm::EDGetTokenT<TauDiscriminator> mediumIsoAbs_inputToken;
     const edm::EDGetTokenT<TauDiscriminator> mediumIsoRel_inputToken;
+    const edm::EDGetTokenT<TauDiscriminator> looseIsoAbs_inputToken;
+    const edm::EDGetTokenT<TauDiscriminator> looseIsoRel_inputToken;
+    const edm::EDGetTokenT<TauDiscriminator> tightIsoAbs_inputToken;
+    const edm::EDGetTokenT<TauDiscriminator> tightIsoRel_inputToken;
     edm::EDGetTokenT<std::vector<reco::PFTau>> taus_token;
     edm::EDGetTokenT<std::vector<PileupSummaryInfo>> puInfo_token;
     edm::EDGetTokenT<std::vector<reco::Vertex>> vertices_token;

@@ -33,14 +33,15 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(3000)
+    input = cms.untracked.int32(1000)
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
     dropDescendantsOfDroppedBranches = cms.untracked.bool(False),
     #fileNames = cms.untracked.vstring('/store/mc/RunIIFall18wmLHEGS/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM/102X_upgrade2018_realistic_v11-v1/120000/D9393C36-D02E-8C44-948C-D50E889C6690.root'),
-    fileNames = cms.untracked.vstring('file:CB85D3F3-2030-3D4F-B9B7-909839DA4DF2.root'), #DY
+    #fileNames = cms.untracked.vstring('file:CB85D3F3-2030-3D4F-B9B7-909839DA4DF2.root'), #DY
+    fileNames = cms.untracked.vstring('file:00CAF27C-A02C-E811-BC5C-02163E01770D.root'), #VBF
     inputCommands = cms.untracked.vstring(
         'keep *',
         'drop *_genParticles_*_*',
