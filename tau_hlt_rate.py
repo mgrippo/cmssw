@@ -29,13 +29,16 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10000)
+    input = cms.untracked.int32(-1)
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
     #fileNames = cms.untracked.vstring('/store/data/Run2018D/ZeroBias9/RAW/v1/000/324/536/00000/C422DF3F-7430-4B49-B0CE-376E6A662328.root'),
-    fileNames = cms.untracked.vstring('file:2CA562E1-389F-E811-858A-FA163EE35BE6.root'),
+    fileNames = cms.untracked.vstring('file:raw_ZeroBias/2CA562E1-389F-E811-858A-FA163EE35BE6.root',
+                                      'file:raw_ZeroBias/129CA157-37A0-E811-AB9D-FA163E2286AE.root',
+                                      'file:raw_ZeroBias/125F1594-13A1-E811-AEE7-FA163E6CD0D3.root',
+                                      'file:raw_ZeroBias/10E9C386-3BA0-E811-8747-FA163ED0CAD6.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
