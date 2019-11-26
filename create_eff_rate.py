@@ -185,15 +185,15 @@ full_deep_rate = {}
 full_deep_rate_err = {}
 full_deep_eff = {}
 full_deep_eff_err = {}
-efficiency_l = {}
-efficiency_m = {}
-efficiency_t = {}
+efficiency_l = []
+efficiency_m = []
+efficiency_t = []
 efficiency_error_l = np.zeros( (2,len(pt_thrs)) )
 efficiency_error_m = np.zeros( (2,len(pt_thrs)) )
 efficiency_error_t = np.zeros( (2,len(pt_thrs)) )
-rate_total_l = {}
-rate_total_m = {}
-rate_total_t = {}
+rate_total_l = []
+rate_total_m = []
+rate_total_t = []
 rate_error_l = np.zeros( (2,len(pt_thrs)) )
 rate_error_m = np.zeros( (2,len(pt_thrs)) )
 rate_error_t = np.zeros( (2,len(pt_thrs)) )
@@ -216,7 +216,7 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
     initialCounter_eff = f_eff.Get("initial_counter")
     initialCounter_rate = f_rate.Get("initial_counter")
 
-    for thr_index in range(len(pt_thrs) - 1):
+    for thr_index in range(len(pt_thrs)):
         print("pt_thr: ",pt_thrs[thr_index])
         efficiency = []
         error_efficiency = np.zeros( (2,len(pt_bins) - 1) )
@@ -294,35 +294,35 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
 
         eff_l, eff_err_low_l, eff_err_up_l, eff_m, eff_err_low_m, eff_err_up_m, eff_t, eff_err_low_t, eff_err_up_t=BaseEfficiency_Simple(df_eff,pt_thrs[thr_index])
         rate_l, rate_err_low_l, rate_err_up_l, rate_m, rate_err_low_m, rate_err_up_m, rate_t, rate_err_low_t, rate_err_up_t=BaseRate_complete(initialCounter_rate.GetEntries(),df_rate,pt_thrs[thr_index])
-        efficiency_l[thr_index] = eff_l
+        efficiency_l.append(eff_l)
         efficiency_error_l[0,thr_index]=eff_err_low_l
         efficiency_error_l[1,thr_index]=eff_err_up_l
-        efficiency_m[thr_index] = eff_m
+        efficiency_m.append(eff_m)
         efficiency_error_m[0,thr_index]=eff_err_low_m
         efficiency_error_m[1,thr_index]=eff_err_up_m
-        efficiency_t[thr_index] = eff_t
+        efficiency_t.append(eff_t)
         efficiency_error_t[0,thr_index]=eff_err_low_t
         efficiency_error_t[1,thr_index]=eff_err_up_t
 
-        rate_total_l[thr_index] = rate_l
+        rate_total_l.append(rate_l)
         rate_error_l[0,thr_index]=rate_err_low_l
         rate_error_l[1,thr_index]=rate_err_up_l
-        rate_total_m[thr_index] = rate_m
+        rate_total_m.append(rate_m)
         rate_error_m[0,thr_index]=rate_err_low_m
         rate_error_m[1,thr_index]=rate_err_up_m
-        rate_total_t[thr_index] = rate_t
+        rate_total_t.append(rate_t)
         rate_error_t[0,thr_index]=rate_err_low_t
         rate_error_t[1,thr_index]=rate_err_up_t
 
-        ax4.errorbar(rate_total_l,efficiency_l,yerr=efficiency_error_l,xerr=rate_error_l, label=str(pt_thrs[thr_index])+' GeV')
+        ax4.errorbar(rate_total_l[thr_index],efficiency_l[thr_index],yerr=efficiency_error_l[:,thr_index],xerr=rate_error_l[:,thr_index], label=str(pt_thrs[thr_index])+' GeV')
         ax4.set_ylabel('Efficiency')
         ax4.set_xlabel('Rate [Hz]')
         ax4.legend()
-        ax5.errorbar(rate_total_m,efficiency_m,yerr=efficiency_error_m,xerr=rate_error_m, label=str(pt_thrs[thr_index])+' GeV')
+        ax5.errorbar(rate_total_m[thr_index],efficiency_m[thr_index],yerr=efficiency_error_m[:,thr_index],xerr=rate_error_m[:,thr_index], label=str(pt_thrs[thr_index])+' GeV')
         ax5.set_ylabel('Efficiency')
         ax5.set_xlabel('Rate [Hz]')
         ax5.legend()
-        ax6.errorbar(rate_total_t,efficiency_t,yerr=efficiency_error_t,xerr=rate_error_t, label=str(pt_thrs[thr_index])+' GeV')
+        ax6.errorbar(rate_total_t[thr_index],efficiency_t[thr_index],yerr=efficiency_error_t[:,thr_index],xerr=rate_error_t[:,thr_index], label=str(pt_thrs[thr_index])+' GeV')
         ax6.set_ylabel('Efficiency')
         ax6.set_xlabel('Rate [Hz]')
         ax6.legend()
