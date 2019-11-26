@@ -48,18 +48,26 @@ def BaseRate(n_initial, df_zb, pt_thr):
     df_zb_m = df_zb_m.Filter('ntaus >= 1')#to bechanged to 2!!!
     n_events_passed_m = df_zb_m.Count()
     rate_m = (float(n_events_passed_m.GetValue())/float(n_initial))*2544*11245#*77560.28 #forL1
-    #loose
-    # df_zb_l = df_zb.Define('ntaus_l','getNtaus_base_loose(tau_looseIsoAbs,tau_looseIsoRel,tau_pt,{})'.format(pt_thr))
-    # df_zb_l = df_zb.Filter('ntaus_l >= 1')#to bechanged to 2!!!
-    # n_events_passed_l = df_zb_l.Count()
-    # rate_l = (float(n_events_passed_l.GetValue())/float(n_initial))*2544*11245#*77560.28 #forL1
-    # #tight
-    # df_zb_t = df_zb.Define('ntaus_t','getNtaus_base_tight(tau_tightIsoAbs,tau_tightIsoRel,tau_pt,{})'.format(pt_thr))
-    # df_zb_t = df_zb.Filter('getNtaus_base_tight >= 1')#to bechanged to 2!!!
-    # n_events_passed_t = df_zb_t.Count()
-    # rate_t = (float(n_events_passed_t.GetValue())/float(n_initial))*2544*11245#*77560.28 #forL1
-    #return rate_l, rate_m, rate_t
     return rate_m
+
+def BaseRate_complete(n_initial, df_zb, pt_thr):
+    n_events = df_zb.Count()
+    #medium
+    df_zb_m = df_zb.Define('ntaus','getNtaus_base(tau_mediumIsoAbs,tau_mediumIsoRel,tau_pt,{})'.format(pt_thr))
+    df_zb_m = df_zb_m.Filter('ntaus >= 1')#to bechanged to 2!!!
+    n_events_passed_m = df_zb_m.Count()
+    rate_m = (float(n_events_passed_m.GetValue())/float(n_initial))*2544*11245#*77560.28 #forL1
+    #loose
+    df_zb_l = df_zb.Define('ntaus_l','getNtaus_base_loose(tau_looseIsoAbs,tau_looseIsoRel,tau_pt,{})'.format(pt_thr))
+    df_zb_l = df_zb_l.Filter('ntaus_l >= 1')#to bechanged to 2!!!
+    n_events_passed_l = df_zb_l.Count()
+    rate_l = (float(n_events_passed_l.GetValue())/float(n_initial))*2544*11245#*77560.28 #forL1
+    # #tight
+    df_zb_t = df_zb.Define('ntaus_t','getNtaus_base_tight(tau_tightIsoAbs,tau_tightIsoRel,tau_pt,{})'.format(pt_thr))
+    df_zb_t = df_zb_t.Filter('ntaus_t >= 1')#to bechanged to 2!!!
+    n_events_passed_t = df_zb_t.Count()
+    rate_t = (float(n_events_passed_t.GetValue())/float(n_initial))*2544*11245#*77560.28 #forL1
+    return rate_l, rate_m, rate_t
 
 def BaseEfficiency_Simple(df_vbf,pt_thr):
     n_events = df_vbf.Count()
@@ -100,7 +108,7 @@ def BaseEfficiency(df_vbf,pt_thr,pt_bin_1,pt_bin_2):
     return eff_l, eff_m, eff_t
 
 #pt_bins = [20,25,30,35,40,45,50,60,70,100,150]
-pt_bins = [20,25]
+pt_bins = np.array([20,25,30,35])
 #pt_thrs = [20,25,30,35,40,45]
 pt_thrs = [20,25,30,35]
 
@@ -124,11 +132,23 @@ tfile_rate = ROOT.TFile(rate_name)
 initial_rate = []
 max_rate = []
 efficiency_total = {}
-efficiency_total_base = {}
 full_deep_rate = {}
 full_deep_eff = {}
-fig, (ax1, ax2, ax3) = plt.subplots(3)
-fig.suptitle('Plots')
+efficiency_l = {}
+efficiency_m = {}
+efficiency_t = {}
+rate_total_l = {}
+rate_total_m = {}
+rate_total_t = {}
+fig1 = plt.figure()
+ax1 = fig1.add_subplot(111)
+fig2 = plt.figure()
+ax2 = fig2.add_subplot(111)
+fig3 = plt.figure()
+ax3 = fig3.add_subplot(111)
+fig4 = plt.figure()
+ax4 = fig4.add_subplot(111)
+
 if not tfile.IsZombie() and not tfile_rate.IsZombie():
     f_eff = ROOT.TFile.Open(eff_name)
     f_rate = ROOT.TFile.Open(rate_name)
@@ -138,7 +158,9 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
     for thr in pt_thrs:
 
         efficiency = []
-        efficiency_base = []
+        efficiency_base_l = []
+        efficiency_base_m = []
+        efficiency_base_t = []
         for pt_index in range(len(pt_bins) - 1):
             #eff vs pt for deep
             print("pt_thr: ",thr)
@@ -159,14 +181,15 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
 
             #eff vs pt for base
             eff_l, eff_m, eff_t=BaseEfficiency(df_eff,35,pt_bins[pt_index],pt_bins[pt_index + 1])
-            efficiency_base.append(eff_l)
-            efficiency_base.append(eff_m)
-            efficiency_base.append(eff_t)
+            efficiency_base_l.append(eff_l)
+            efficiency_base_m.append(eff_m)
+            efficiency_base_t.append(eff_t)
 
         efficiency_total[thr]=efficiency
-        ax1.plot(pt_bins,efficiency_total[thr], 'o--')
-        efficiency_total_base[thr]=efficiency_base
-        ax2.plot(pt_bins,efficiency_total_base[thr], 'r--')
+        ax1.plot((pt_bins[1:] + pt_bins[:-1]) / 2,efficiency_total[thr], 'o--') #non disegna le 4 curve per ogni thr
+        ax2.plot((pt_bins[1:] + pt_bins[:-1]) / 2,efficiency_base_l, 'r--') #non disegna i punti per ogni pt
+        ax2.plot((pt_bins[1:] + pt_bins[:-1]) / 2,efficiency_base_m, 'g')
+        ax2.plot((pt_bins[1:] + pt_bins[:-1]) / 2,efficiency_base_t, 'b')
 
         #eff vs rate deep
         deep_rate = []
@@ -180,7 +203,25 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
 
         ax3.plot(full_deep_eff[thr], full_deep_rate[thr], 'o--')
 
-    plt.savefig("rate_vs_eff_deep.pdf")
+        eff_l, eff_m, eff_t=BaseEfficiency_Simple(df_eff,thr)
+        rate_l, rate_m, rate_t=BaseRate_complete(initialCounter_rate.GetEntries(),df_rate,thr)
+        efficiency_l[thr] = eff_l
+        efficiency_m[thr] = eff_m
+        efficiency_t[thr] = eff_t
+
+        rate_total_l[thr] = rate_l
+        rate_total_m[thr] = rate_m
+        rate_total_t[thr] = rate_t
+
+        ax4.plot(efficiency_l[thr],rate_total_l[thr], 'r')
+        ax4.plot(efficiency_m[thr],rate_total_m[thr], 'g')
+        ax4.plot(efficiency_t[thr],rate_total_t[thr], 'b')
+
+    fig1.savefig("fig1.pdf")
+    fig2.savefig("fig2.pdf")
+    fig3.savefig("fig3.pdf")
+    fig4.savefig("fig4.pdf")
+
 
     print("initial_rate vector: ",initial_rate)
     print("max_rate vector: ",max_rate)
