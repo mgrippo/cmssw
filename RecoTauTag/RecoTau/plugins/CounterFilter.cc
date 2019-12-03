@@ -29,6 +29,7 @@ public:
     CounterFilter(const edm::ParameterSet& cfg) :
         isMC(cfg.getParameter<bool>("isMC")),
         store_hist(cfg.getParameter<bool>("store_hist")),
+        store_both(cfg.getParameter<bool>("store_both")),
         position(cfg.getParameter<std::string>("position")),
         deepTauVSe_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("deepTauVSe"))),
         deepTauVSmu_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("deepTauVSmu"))),
@@ -42,11 +43,16 @@ public:
         taus_token(mayConsume<std::vector<reco::PFTau>>(cfg.getParameter<edm::InputTag>("taus"))),
         puInfo_token(mayConsume<std::vector<PileupSummaryInfo>>(cfg.getParameter<edm::InputTag>("puInfo"))),
         vertices_token(mayConsume<std::vector<reco::Vertex> >(cfg.getParameter<edm::InputTag>("vertices"))),
-        decayMode_token(consumes<reco::PFTauDiscriminator>(cfg.getParameter<edm::InputTag>("decayModeFindingNewDM")))
+        decayMode_token(consumes<reco::PFTauDiscriminator>(cfg.getParameter<edm::InputTag>("decayModeFindingNewDM"))),
+        genParticles_token(mayConsume<std::vector<reco::GenParticle>>(cfg.getParameter<edm::InputTag>("genParticles")))
     {
         std::string full_name = position+"_counter";
         if(store_hist){
             counter = std::make_shared<TH1F>(full_name.c_str(),full_name.c_str(),2,-0.5,1.5);
+        }
+        else if(store_both){
+            counter = std::make_shared<TH1F>(full_name.c_str(),full_name.c_str(),2,-0.5,1.5);
+            counterTuple = std::make_shared<counter_tau::CounterTuple>(full_name, &edm::Service<TFileService>()->file(), false);
         }
         else{
             std::cout << "Pippo" << std::endl;
@@ -55,12 +61,40 @@ public:
     }
 
 private:
+    static constexpr int default_int_value = ::counter_tau::DefaultFillValue<int>();
+    static constexpr float default_value = ::counter_tau::DefaultFillValue<float>();
+
     virtual bool filter(edm::Event& event, const edm::EventSetup&) override
     {
         bool result = true;
 
         if(store_hist){
             counter->Fill(1);
+        }
+        else if(store_both){
+            counter->Fill(1);
+
+            edm::Handle<std::vector<reco::GenParticle>> hGenParticles;
+            event.getByToken(genParticles_token, hGenParticles);
+            auto genParticles = hGenParticles.isValid() ? hGenParticles.product() : nullptr;
+
+            (*counterTuple)().run  = event.id().run();
+            (*counterTuple)().lumi = event.id().luminosityBlock();
+            (*counterTuple)().evt  = event.id().event();
+
+            std::vector<analysis::gen_truth::LeptonMatchResult> lepton_results = analysis::gen_truth::CollectGenLeptons(*genParticles);
+
+            for(unsigned n = 0; n < lepton_results.size(); ++n){
+                const auto gen_match = lepton_results.at(n);
+                (*counterTuple)().lepton_gen_match.push_back(static_cast<int>(gen_match.match));
+                (*counterTuple)().gen_tau_pt.push_back(static_cast<float>(gen_match.visible_p4.pt()));
+                (*counterTuple)().gen_tau_eta.push_back(static_cast<float>(gen_match.visible_p4.eta()));
+                (*counterTuple)().gen_tau_phi.push_back(static_cast<float>(gen_match.visible_p4.phi()));
+                (*counterTuple)().gen_tau_e.push_back(static_cast<float>(gen_match.visible_p4.e()));
+
+            }
+
+            counterTuple->Fill();
         }
         else{
             edm::Handle<std::vector<reco::Vertex>> vertices;
@@ -104,7 +138,12 @@ private:
                 edm::Handle<std::vector<PileupSummaryInfo>> puInfo;
                 event.getByToken(puInfo_token, puInfo);
                 (*counterTuple)().npu = analysis::gen_truth::GetNumberOfPileUpInteractions(puInfo);
+
             }
+
+            edm::Handle<std::vector<reco::GenParticle>> hGenParticles;
+            event.getByToken(genParticles_token, hGenParticles);
+            auto genParticles = hGenParticles.isValid() ? hGenParticles.product() : nullptr;
 
             (*counterTuple)().run  = event.id().run();
             (*counterTuple)().lumi = event.id().luminosityBlock();
@@ -112,6 +151,21 @@ private:
 
             for(size_t tau_index = 0; tau_index < taus->size(); ++tau_index) {
                 const reco::PFTau& tau = taus->at(tau_index);
+
+                if(genParticles) {
+                    const auto gen_match = analysis::gen_truth::LeptonGenMatch(tau.polarP4(), *genParticles);
+                    (*counterTuple)().lepton_gen_match.push_back(static_cast<int>(gen_match.match));
+                    (*counterTuple)().gen_tau_pt.push_back(static_cast<float>(gen_match.visible_p4.pt()));
+                    (*counterTuple)().gen_tau_eta.push_back(static_cast<float>(gen_match.visible_p4.eta()));
+                    (*counterTuple)().gen_tau_phi.push_back(static_cast<float>(gen_match.visible_p4.phi()));
+                    (*counterTuple)().gen_tau_e.push_back(static_cast<float>(gen_match.visible_p4.e()));
+                } else {
+                    (*counterTuple)().lepton_gen_match.push_back(default_int_value);
+                    (*counterTuple)().gen_tau_pt.push_back(default_value);
+                    (*counterTuple)().gen_tau_eta.push_back(default_value);
+                    (*counterTuple)().gen_tau_phi.push_back(default_value);
+                    (*counterTuple)().gen_tau_e.push_back(default_value);
+                }
 
                 (*counterTuple)().tau_pt.push_back(static_cast<float>(tau.polarP4().pt()));
                 (*counterTuple)().tau_eta.push_back(static_cast<float>(tau.polarP4().eta()));
@@ -146,7 +200,7 @@ private:
     }
 
 private:
-    const bool isMC, store_hist;
+    const bool isMC, store_hist, store_both;
     std::string position;
     const edm::EDGetTokenT<TauDiscriminator> deepTauVSe_inputToken;
     const edm::EDGetTokenT<TauDiscriminator> deepTauVSmu_inputToken;
@@ -161,6 +215,7 @@ private:
     edm::EDGetTokenT<std::vector<PileupSummaryInfo>> puInfo_token;
     edm::EDGetTokenT<std::vector<reco::Vertex>> vertices_token;
     edm::EDGetTokenT<reco::PFTauDiscriminator> decayMode_token;
+    edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticles_token;
     std::shared_ptr<TH1F> counter;
     std::shared_ptr<counter_tau::CounterTuple> counterTuple;
 

@@ -13307,7 +13307,8 @@ fragment.hltHpsDoublePFTau35TrackPt1Reg = cms.EDFilter( "HLT1PFTau",
 
 fragment.initialFilter = cms.EDFilter( "CounterFilter",
     isMC = cms.bool(False), #from outside
-    store_hist = cms.bool(True), #from outside
+    store_hist = cms.bool(False), #from outside
+    store_both = cms.bool(True), #from outside
     position = cms.string("initial"),
     deepTauVSe = cms.InputTag('try1'),
     deepTauVSmu = cms.InputTag('try2'),
@@ -13318,15 +13319,17 @@ fragment.initialFilter = cms.EDFilter( "CounterFilter",
     looseIsoRel  = cms.InputTag('try11'),
     tightIsoAbs  = cms.InputTag('try12'),
     tightIsoRel  = cms.InputTag('try13'),
-    taus = cms.InputTag('try6'),
+    taus = cms.InputTag('try6'), 
     puInfo = cms.InputTag('try7'),
     vertices = cms.InputTag('try8'),
-    decayModeFindingNewDM = cms.InputTag('try9')
+    decayModeFindingNewDM = cms.InputTag('try9'),
+    genParticles = cms.InputTag('genParticles')
 )
 
 fragment.afterL1Filter = cms.EDFilter( "CounterFilter",
     isMC = cms.bool(False), #from outside
     store_hist = cms.bool(True), #from outside
+    store_both = cms.bool(False), #from outside
     position = cms.string("afterL1Filter"),
     deepTauVSe = cms.InputTag('try1'),
     deepTauVSmu = cms.InputTag('try2'),
@@ -13340,12 +13343,14 @@ fragment.afterL1Filter = cms.EDFilter( "CounterFilter",
     taus = cms.InputTag('try6'),
     puInfo = cms.InputTag('try7'),
     vertices = cms.InputTag('try8'),
-    decayModeFindingNewDM = cms.InputTag('try9')
+    decayModeFindingNewDM = cms.InputTag('try9'),
+    genParticles = cms.InputTag('try14')
 )
 
 fragment.intermidiateFilter = cms.EDFilter( "CounterFilter",
     isMC = cms.bool(False), #from outside
     store_hist = cms.bool(True), #from outside
+    store_both = cms.bool(False), #from outside
     position = cms.string("intermidiate"),
     deepTauVSe = cms.InputTag('deepTauProducer','VSe'),
     deepTauVSmu = cms.InputTag('deepTauProducer','VSmu'),
@@ -13359,12 +13364,14 @@ fragment.intermidiateFilter = cms.EDFilter( "CounterFilter",
     taus = cms.InputTag('hltHpsPFTauProducerReg'),
     puInfo = cms.InputTag('addPileupInfo','','HLT'),
     vertices = cms.InputTag('hltPixelVertices'),
-    decayModeFindingNewDM = cms.InputTag('hltHpsPFTauDiscriminationByDecayModeFindingNewDMsReg')
+    decayModeFindingNewDM = cms.InputTag('hltHpsPFTauDiscriminationByDecayModeFindingNewDMsReg'),
+    genParticles = cms.InputTag('genParticles')
 )
 
 fragment.finalFilter = cms.EDFilter( "CounterFilter",
     isMC = cms.bool(False), #from outside
     store_hist = cms.bool(False), #from outside
+    store_both = cms.bool(False), #from outside
     position = cms.string("final"),
     deepTauVSe = cms.InputTag('deepTauProducer','VSe'),
     deepTauVSmu = cms.InputTag('deepTauProducer','VSmu'),
@@ -13378,7 +13385,8 @@ fragment.finalFilter = cms.EDFilter( "CounterFilter",
     taus = cms.InputTag('hltHpsL1JetsHLTDoublePFTauTrackPt1MediumChargedIsolationMatchReg'),
     puInfo = cms.InputTag('addPileupInfo','','HLT'),
     vertices = cms.InputTag('hltPixelVertices'),
-    decayModeFindingNewDM = cms.InputTag('hltHpsPFTauDiscriminationByDecayModeFindingNewDMsReg')
+    decayModeFindingNewDM = cms.InputTag('hltHpsPFTauDiscriminationByDecayModeFindingNewDMsReg'),
+    genParticles = cms.InputTag('genParticles')
 )
 
 from RecoTauTag.RecoTau.PFRecoTauDiscriminationByIsolation_cfi import *

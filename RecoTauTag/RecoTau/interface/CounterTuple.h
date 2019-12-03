@@ -16,8 +16,13 @@ This file is part of https://github.com/cms-tau-pog/TauTriggerTools. */
     VAR(ULong64_t, evt) /* event number */ \
     VAR(Int_t, npv) /* number of primary vertices */ \
     VAR(Float_t, npu) /* number of in-time pu interactions added to the event */ \
+    VAR(std::vector<Int_t>, lepton_gen_match) /* gen match info */ \
+    VAR(std::vector<Float_t>, gen_tau_pt) /* pt of the gen tau */ \
+    VAR(std::vector<Float_t>, gen_tau_eta) /* eta of the gen tau */ \
+    VAR(std::vector<Float_t>, gen_tau_phi) /* phi of the gen tau */ \
+    VAR(std::vector<Float_t>, gen_tau_e) /* energy of the gen tau */ \
     VAR(std::vector<Float_t>, tau_pt) /* pt of the tau */ \
-    VAR(std::vector<Float_t>, tau_eta) /* pt of the tau */ \
+    VAR(std::vector<Float_t>, tau_eta) /* eta of the tau */ \
     VAR(std::vector<Float_t>, tau_mediumIsoAbs) /* medium PF iso abs for hadronic Tau */ \
     VAR(std::vector<Float_t>, tau_mediumIsoRel) /* medium PF iso rel for hadronic Tau */ \
     VAR(std::vector<Float_t>, tau_looseIsoAbs) /* loose PF iso abs for hadronic Tau */ \
