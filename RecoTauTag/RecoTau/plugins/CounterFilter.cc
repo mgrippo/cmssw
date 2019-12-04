@@ -40,6 +40,7 @@ public:
         looseIsoRel_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("looseIsoRel"))),
         tightIsoAbs_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("tightIsoAbs"))),
         tightIsoRel_inputToken(mayConsume<TauDiscriminator>(cfg.getParameter<edm::InputTag>("tightIsoRel"))),
+        original_taus_token(mayConsume<std::vector<reco::PFTau>>(cfg.getParameter<edm::InputTag>("original_taus"))),
         taus_token(mayConsume<std::vector<reco::PFTau>>(cfg.getParameter<edm::InputTag>("taus"))),
         puInfo_token(mayConsume<std::vector<PileupSummaryInfo>>(cfg.getParameter<edm::InputTag>("puInfo"))),
         vertices_token(mayConsume<std::vector<reco::Vertex> >(cfg.getParameter<edm::InputTag>("vertices"))),
@@ -56,7 +57,6 @@ public:
             counterTuple = std::make_shared<counter_tau::CounterTuple>(full_name, &edm::Service<TFileService>()->file(), false);
         }
         else{
-            std::cout << "Pippo" << std::endl;
             counterTuple = std::make_shared<counter_tau::CounterTuple>(full_name, &edm::Service<TFileService>()->file(), false);
         }
     }
@@ -132,6 +132,9 @@ private:
             edm::Handle<TauDiscriminator> tightIsoRel;
             event.getByToken(tightIsoRel_inputToken, tightIsoRel);
 
+            edm::Handle<std::vector<reco::PFTau>> original_taus;
+            event.getByToken(original_taus_token, original_taus);
+
             edm::Handle<std::vector<reco::PFTau>> taus;
             event.getByToken(taus_token, taus);
 
@@ -154,11 +157,11 @@ private:
             (*counterTuple)().lumi = event.id().luminosityBlock();
             (*counterTuple)().evt  = event.id().event();
 
-            for(size_t tau_index = 0; tau_index < taus->size(); ++tau_index) {
-                const reco::PFTau& tau = taus->at(tau_index);
+            for(size_t orig_tau_index = 0; orig_tau_index < original_taus->size(); ++orig_tau_index) {
+                const reco::PFTau& original_tau = original_taus->at(orig_tau_index);
 
                 if(genParticles) {
-                    const auto gen_match = analysis::gen_truth::LeptonGenMatch(tau.polarP4(), *genParticles);
+                    const auto gen_match = analysis::gen_truth::LeptonGenMatch(original_tau.polarP4(), *genParticles);
                     (*counterTuple)().lepton_gen_match.push_back(static_cast<int>(gen_match.match));
                     (*counterTuple)().gen_tau_pt.push_back(static_cast<float>(gen_match.visible_p4.pt()));
                     (*counterTuple)().gen_tau_eta.push_back(static_cast<float>(gen_match.visible_p4.eta()));
@@ -172,19 +175,28 @@ private:
                     (*counterTuple)().gen_tau_e.push_back(default_value);
                 }
 
-                (*counterTuple)().tau_pt.push_back(static_cast<float>(tau.polarP4().pt()));
-                (*counterTuple)().tau_eta.push_back(static_cast<float>(tau.polarP4().eta()));
-                (*counterTuple)().tau_mediumIsoAbs.push_back(static_cast<float>(mediumIsoAbs->value(tau_index)));
-                (*counterTuple)().tau_mediumIsoRel.push_back(static_cast<float>(mediumIsoRel->value(tau_index)));
-                (*counterTuple)().tau_looseIsoAbs.push_back(static_cast<float>(looseIsoAbs->value(tau_index)));
-                (*counterTuple)().tau_looseIsoRel.push_back(static_cast<float>(looseIsoRel->value(tau_index)));
-                (*counterTuple)().tau_tightIsoAbs.push_back(static_cast<float>(tightIsoAbs->value(tau_index)));
-                (*counterTuple)().tau_tightIsoRel.push_back(static_cast<float>(tightIsoRel->value(tau_index)));
+                (*counterTuple)().tau_pt.push_back(static_cast<float>(original_tau.polarP4().pt()));
+                (*counterTuple)().tau_eta.push_back(static_cast<float>(original_tau.polarP4().eta()));
+                (*counterTuple)().tau_mediumIsoAbs.push_back(static_cast<float>(mediumIsoAbs->value(orig_tau_index)));
+                (*counterTuple)().tau_mediumIsoRel.push_back(static_cast<float>(mediumIsoRel->value(orig_tau_index)));
+                (*counterTuple)().tau_looseIsoAbs.push_back(static_cast<float>(looseIsoAbs->value(orig_tau_index)));
+                (*counterTuple)().tau_looseIsoRel.push_back(static_cast<float>(looseIsoRel->value(orig_tau_index)));
+                (*counterTuple)().tau_tightIsoAbs.push_back(static_cast<float>(tightIsoAbs->value(orig_tau_index)));
+                (*counterTuple)().tau_tightIsoRel.push_back(static_cast<float>(tightIsoRel->value(orig_tau_index)));
 
-                (*counterTuple)().deepTau_VSe.push_back(static_cast<float>(deepTau_VSe->value(tau_index)));
-                (*counterTuple)().deepTau_VSmu.push_back(static_cast<float>(deepTau_VSmu->value(tau_index)));
-                (*counterTuple)().deepTau_VSjet.push_back(static_cast<float>(deepTau_VSjet->value(tau_index)));
-                (*counterTuple)().tau_decayModeFindingNewDMs.push_back(decayModesNew->value(tau_index));
+                (*counterTuple)().deepTau_VSe.push_back(static_cast<float>(deepTau_VSe->value(orig_tau_index)));
+                (*counterTuple)().deepTau_VSmu.push_back(static_cast<float>(deepTau_VSmu->value(orig_tau_index)));
+                (*counterTuple)().deepTau_VSjet.push_back(static_cast<float>(deepTau_VSjet->value(orig_tau_index)));
+                (*counterTuple)().tau_decayModeFindingNewDMs.push_back(decayModesNew->value(orig_tau_index));
+
+                for(size_t tau_index = 0; tau_index < taus->size(); ++tau_index){
+                    const reco::PFTau& tau = taus->at(tau_index);
+                    bool passed_lastFilter = false;
+                    const double deltaR = ROOT::Math::VectorUtil::DeltaR(original_tau.polarP4(),tau.polarP4());
+                    if(deltaR < 0.01)
+                        passed_lastFilter = true;
+                    (*counterTuple)().tau_passedLastFilter.push_back(passed_lastFilter);
+                }
 
             }
 
@@ -220,6 +232,7 @@ private:
     const edm::EDGetTokenT<TauDiscriminator> looseIsoRel_inputToken;
     const edm::EDGetTokenT<TauDiscriminator> tightIsoAbs_inputToken;
     const edm::EDGetTokenT<TauDiscriminator> tightIsoRel_inputToken;
+    edm::EDGetTokenT<std::vector<reco::PFTau>> original_taus_token;
     edm::EDGetTokenT<std::vector<reco::PFTau>> taus_token;
     edm::EDGetTokenT<std::vector<PileupSummaryInfo>> puInfo_token;
     edm::EDGetTokenT<std::vector<reco::Vertex>> vertices_token;
