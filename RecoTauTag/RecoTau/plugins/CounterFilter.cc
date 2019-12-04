@@ -47,11 +47,12 @@ public:
         genParticles_token(mayConsume<std::vector<reco::GenParticle>>(cfg.getParameter<edm::InputTag>("genParticles")))
     {
         std::string full_name = position+"_counter";
+        std::string full_name_hist = position+"_counter_hist";
         if(store_hist){
-            counter = std::make_shared<TH1F>(full_name.c_str(),full_name.c_str(),2,-0.5,1.5);
+            counter = std::make_shared<TH1F>(full_name_hist.c_str(),full_name_hist.c_str(),2,-0.5,1.5);
         }
         else if(store_both){
-            counter = std::make_shared<TH1F>(full_name.c_str(),full_name.c_str(),2,-0.5,1.5);
+            counter = std::make_shared<TH1F>(full_name_hist.c_str(),full_name_hist.c_str(),2,-0.5,1.5);
             counterTuple = std::make_shared<counter_tau::CounterTuple>(full_name, &edm::Service<TFileService>()->file(), false);
         }
         else{
@@ -74,25 +75,28 @@ private:
         else if(store_both){
             counter->Fill(1);
 
-            edm::Handle<std::vector<reco::GenParticle>> hGenParticles;
-            event.getByToken(genParticles_token, hGenParticles);
-            auto genParticles = hGenParticles.isValid() ? hGenParticles.product() : nullptr;
-
             (*counterTuple)().run  = event.id().run();
             (*counterTuple)().lumi = event.id().luminosityBlock();
             (*counterTuple)().evt  = event.id().event();
 
-            std::vector<analysis::gen_truth::LeptonMatchResult> lepton_results = analysis::gen_truth::CollectGenLeptons(*genParticles);
+            if(isMC){
+                edm::Handle<std::vector<reco::GenParticle>> hGenParticles;
+                event.getByToken(genParticles_token, hGenParticles);
+                genParticles = hGenParticles.isValid() ? hGenParticles.product() : nullptr;
 
-            for(unsigned n = 0; n < lepton_results.size(); ++n){
-                const auto gen_match = lepton_results.at(n);
-                (*counterTuple)().lepton_gen_match.push_back(static_cast<int>(gen_match.match));
-                (*counterTuple)().gen_tau_pt.push_back(static_cast<float>(gen_match.visible_p4.pt()));
-                (*counterTuple)().gen_tau_eta.push_back(static_cast<float>(gen_match.visible_p4.eta()));
-                (*counterTuple)().gen_tau_phi.push_back(static_cast<float>(gen_match.visible_p4.phi()));
-                (*counterTuple)().gen_tau_e.push_back(static_cast<float>(gen_match.visible_p4.e()));
+                std::vector<analysis::gen_truth::LeptonMatchResult> lepton_results = analysis::gen_truth::CollectGenLeptons(*genParticles);
 
+                for(unsigned n = 0; n < lepton_results.size(); ++n){
+                    const auto gen_match = lepton_results.at(n);
+                    (*counterTuple)().lepton_gen_match.push_back(static_cast<int>(gen_match.match));
+                    (*counterTuple)().gen_tau_pt.push_back(static_cast<float>(gen_match.visible_p4.pt()));
+                    (*counterTuple)().gen_tau_eta.push_back(static_cast<float>(gen_match.visible_p4.eta()));
+                    (*counterTuple)().gen_tau_phi.push_back(static_cast<float>(gen_match.visible_p4.phi()));
+                    (*counterTuple)().gen_tau_e.push_back(static_cast<float>(gen_match.visible_p4.e()));
+
+                }
             }
+
 
             counterTuple->Fill();
         }
@@ -139,11 +143,12 @@ private:
                 event.getByToken(puInfo_token, puInfo);
                 (*counterTuple)().npu = analysis::gen_truth::GetNumberOfPileUpInteractions(puInfo);
 
+                edm::Handle<std::vector<reco::GenParticle>> hGenParticles;
+                event.getByToken(genParticles_token, hGenParticles);
+                genParticles = hGenParticles.isValid() ? hGenParticles.product() : nullptr;
             }
 
-            edm::Handle<std::vector<reco::GenParticle>> hGenParticles;
-            event.getByToken(genParticles_token, hGenParticles);
-            auto genParticles = hGenParticles.isValid() ? hGenParticles.product() : nullptr;
+
 
             (*counterTuple)().run  = event.id().run();
             (*counterTuple)().lumi = event.id().luminosityBlock();
@@ -195,6 +200,10 @@ private:
             //counter->Write();
             edm::Service<TFileService>()->file().WriteTObject(counter.get());
         }
+        else if(store_both){
+            edm::Service<TFileService>()->file().WriteTObject(counter.get());
+            counterTuple->Write();
+        }
         else
             counterTuple->Write();
     }
@@ -216,6 +225,7 @@ private:
     edm::EDGetTokenT<std::vector<reco::Vertex>> vertices_token;
     edm::EDGetTokenT<reco::PFTauDiscriminator> decayMode_token;
     edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticles_token;
+    const std::vector<reco::GenParticle>* genParticles;
     std::shared_ptr<TH1F> counter;
     std::shared_ptr<counter_tau::CounterTuple> counterTuple;
 
