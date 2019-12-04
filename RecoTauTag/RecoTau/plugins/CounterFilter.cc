@@ -189,14 +189,18 @@ private:
                 (*counterTuple)().deepTau_VSjet.push_back(static_cast<float>(deepTau_VSjet->value(orig_tau_index)));
                 (*counterTuple)().tau_decayModeFindingNewDMs.push_back(decayModesNew->value(orig_tau_index));
 
+                bool passed_lastFilter = false;
                 for(size_t tau_index = 0; tau_index < taus->size(); ++tau_index){
                     const reco::PFTau& tau = taus->at(tau_index);
-                    bool passed_lastFilter = false;
+
                     const double deltaR = ROOT::Math::VectorUtil::DeltaR(original_tau.polarP4(),tau.polarP4());
-                    if(deltaR < 0.01)
+                    if(deltaR < 0.01){
                         passed_lastFilter = true;
-                    (*counterTuple)().tau_passedLastFilter.push_back(passed_lastFilter);
+                        break;
+                    }
                 }
+
+                (*counterTuple)().tau_passedLastFilter.push_back(passed_lastFilter);
 
             }
 
