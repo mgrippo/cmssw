@@ -16,7 +16,6 @@ def update(process,summary):
 	process.intermidiateFilter.isMC = cms.bool(False)
 
 	process.finalFilter.store_hist = cms.bool(False)
-	process.finalFilter.store_hist = cms.bool(False)
 	process.finalFilter.store_both = cms.bool(False)
 	process.finalFilter.isMC = cms.bool(False)
 

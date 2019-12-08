@@ -97,7 +97,6 @@ private:
                 }
             }
 
-
             counterTuple->Fill();
         }
         else{
@@ -141,17 +140,17 @@ private:
             edm::Handle<reco::PFTauDiscriminator> decayModesNew;
             event.getByToken(decayMode_token, decayModesNew);
 
+            edm::Handle<std::vector<reco::GenParticle>> hGenParticles;
             if(isMC) {
                 edm::Handle<std::vector<PileupSummaryInfo>> puInfo;
                 event.getByToken(puInfo_token, puInfo);
                 (*counterTuple)().npu = analysis::gen_truth::GetNumberOfPileUpInteractions(puInfo);
 
-                edm::Handle<std::vector<reco::GenParticle>> hGenParticles;
                 event.getByToken(genParticles_token, hGenParticles);
-                genParticles = hGenParticles.isValid() ? hGenParticles.product() : nullptr;
+
             }
 
-
+            genParticles = hGenParticles.isValid() ? hGenParticles.product() : nullptr;
 
             (*counterTuple)().run  = event.id().run();
             (*counterTuple)().lumi = event.id().luminosityBlock();
@@ -174,6 +173,7 @@ private:
                     (*counterTuple)().gen_tau_phi.push_back(default_value);
                     (*counterTuple)().gen_tau_e.push_back(default_value);
                 }
+
 
                 (*counterTuple)().tau_pt.push_back(static_cast<float>(original_tau.polarP4().pt()));
                 (*counterTuple)().tau_eta.push_back(static_cast<float>(original_tau.polarP4().eta()));

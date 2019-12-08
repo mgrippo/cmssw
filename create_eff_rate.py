@@ -256,6 +256,7 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
         solution = optimize.root_scalar(f,bracket=[0,1],method='bisect')
         deep_thr = solution.root
 
+        print("deepTau thr at the fixed rate for 35 GeV for cut based Medium: ", deep_thr)
         fixed_eff_value, fixed_err_low_eff, fixed_err_up_eff = GetEfficiency_Simple(initialCounter_eff.GetEntries(),df_eff,deep_thr,pt_thrs[thr_index])
         fix_eff.append(fixed_eff_value)
         #deep_thr = 0 #to check eff is equal to 100%

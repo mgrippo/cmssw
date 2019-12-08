@@ -357,7 +357,7 @@ for disc in discriminators:
 #     return df
 
 def CreateDF(file_name, filter, filter_ele, filter_mu):
-    df = ReadBrancesToDataFrame(file_name, 'deep_taus', all_branches)
+    df = ReadBrancesToDataFrame(file_name, 'final_flatten_counter', all_branches)
     #base_name = os.path.basename(file_name)
     # pred_file_name = os.path.splitext(base_name)[0] + '_pred.h5'
     # AddPredictionsToDataFrame(df, os.path.join(args.deep_results, pred_file_name))

@@ -14,9 +14,17 @@ This file is part of https://github.com/cms-tau-pog/TauTriggerTools. */
     VAR(UInt_t, run) /* run number */ \
     VAR(UInt_t, lumi) /* lumi section */ \
     VAR(ULong64_t, evt) /* event number */ \
-    VAR4(Float_t, tau_pt, tau_eta, tau_phi, tau_mass) /* 4-momentum of the tau */ \
-    VAR(Int_t, lepton_gen_match) /* matching with leptons on the generator level (see Htautau Twiki for details):
-                                    Electron = 1, Muon = 2, TauElectron = 3, TauMuon = 4, Tau = 5, NoMatch = 6 */ \
+    VAR(Int_t, npv) /* number of primary vertices */ \
+    VAR(Float_t, npu) /* number of in-time pu interactions added to the event */ \
+    VAR(Int_t, lepton_gen_match) /* gen match info */ \
+    VAR(Float_t, gen_tau_pt) /* pt of the gen tau */ \
+    VAR(Float_t, gen_tau_eta) /* eta of the gen tau */ \
+    VAR(Float_t, gen_tau_phi) /* phi of the gen tau */ \
+    VAR(Float_t, gen_tau_e) /* energy of the gen tau */ \
+    VAR(Float_t, tau_pt) /* pt of the tau */ \
+    VAR(Float_t, tau_eta) /* eta of the tau */ \
+    VAR(Float_t, tau_phi) /* phi of the tau */ \
+    VAR(Float_t, tau_mass) /* eta of the tau */ \
     VAR(Int_t, tau_decayMode) /* tau decay mode */ \
     VAR(Float_t, tau_looseIsoAbs) /* loose PF iso abs for hadronic Tau */ \
     VAR(Float_t, tau_looseIsoRel) /* loose PF iso rel for hadronic Tau */ \
@@ -27,6 +35,8 @@ This file is part of https://github.com/cms-tau-pog/TauTriggerTools. */
     VAR(Float_t, deepTau_VSe) /* deepTau_VSe raw discriminator */ \
     VAR(Float_t, deepTau_VSmu) /* deepTau_VSmu raw discriminator */ \
     VAR(Float_t, deepTau_VSjet) /* deepTau_VSjet raw discriminator */ \
+    VAR(Int_t, tau_decayModeFindingNewDMs) /* new decayMode for tau */ \
+    VAR(bool, tau_passedLastFilter) /* bool if the passed the last Filter */ \
     /**/
 
 #define VAR(type, name) DECLARE_BRANCH_VARIABLE(type, name)

@@ -39,7 +39,9 @@ process.source = cms.Source("PoolSource",
     #                                   'file:raw_ZeroBias/129CA157-37A0-E811-AB9D-FA163E2286AE.root',
     #                                   'file:raw_ZeroBias/125F1594-13A1-E811-AEE7-FA163E6CD0D3.root',
     #                                   'file:raw_ZeroBias/10E9C386-3BA0-E811-8747-FA163ED0CAD6.root'),
-    fileNames = cms.untracked.vstring('file:6845E464-BE71-A048-BB12-22D60B0A1D27.root'), #HLTPhysics RunD
+    #fileNames = cms.untracked.vstring('file:6845E464-BE71-A048-BB12-22D60B0A1D27.root'), #HLTPhysics RunD
+    #fileNames = cms.untracked.vstring('file:294DC28D-761A-5E4B-BF40-78D8D3E7DA35.root'), #HLTPhysics RunD
+    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/m/mgrippo/TauTrigger_2019_new/CMSSW_10_6_3/src/13B7733B-0DCE-0D41-949D-1AD9F6A3896B.root'), #HLTPhysics RunD
     secondaryFileNames = cms.untracked.vstring()
 )
 
