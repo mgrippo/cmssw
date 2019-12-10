@@ -139,8 +139,8 @@ class PlotSetup:
 
         if ax_ratio is not None:
             if self.ratio_ylim is not None:
-                ylim = self.ratio_ylim[range_index] if type(self.ratio_ylim[0]) == list else self.ratio_ylim
-                ax_ratio.set_ylim(ylim)
+                #ylim = self.ratio_ylim[range_index] if type(self.ratio_ylim[0]) == list else self.ratio_ylim
+                ax_ratio.set_ylim([0.0, 2])
 
             ax_ratio.set_yscale(self.ratio_yscale)
             ax_ratio.set_xlabel('Tau ID efficiency', fontsize=16)

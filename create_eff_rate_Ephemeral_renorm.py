@@ -28,30 +28,30 @@ def GetRate(n_initial, df_zb, deeptau_thr, pt_thr):
     return rate, err_low, err_up
 
 def GetEfficiency(n_initial,df_vbf, deeptau_thr, pt_thr,pt_bin_1,pt_bin_2):
-    # df_vbf = df_vbf.Define('ntaus_den','getNtaus_inPtBin(deepTau_VSjet,tau_pt,{},{},{},{})'.format(0,0,pt_bin_1,pt_bin_2))
-    # df_vbf_den = df_vbf.Filter('ntaus_den >= 2')#to bechanged to 2!!!
-    # n_events = df_vbf_den.Count()
+    df_vbf = df_vbf.Define('ntaus_den','getNtaus_inPtBin(deepTau_VSjet,tau_pt,{},{},{},{})'.format(0,0,pt_bin_1,pt_bin_2))
+    df_vbf_den = df_vbf.Filter('ntaus_den >= 2')#to bechanged to 2!!!
+    n_events = df_vbf_den.Count()
     df_vbf = df_vbf.Define('ntaus','getNtaus_inPtBin(deepTau_VSjet,tau_pt,{},{},{},{})'.format(deeptau_thr,pt_thr,pt_bin_1,pt_bin_2))
     df_vbf_num = df_vbf.Filter('ntaus >= 2')#to bechanged to 2!!!
     n_events_passed = df_vbf_num.Count()
     #print("nevents: ",n_events.GetValue())
     #print("n_events_passed: ",n_events_passed.GetValue())
-    eff = (float(n_events_passed.GetValue())/float(n_initial))
+    eff = (float(n_events_passed.GetValue())/float(n_events.GetValue()))
     #print("eff: %2f "%(eff))
-    ci = proportion_confint(count=n_events_passed.GetValue(), nobs=n_initial, alpha=0.32, method='beta')
+    ci = proportion_confint(count=n_events_passed.GetValue(), nobs=n_events.GetValue(), alpha=0.32, method='beta')
     err_low = (eff - ci[0])
     err_up = (ci[1] - eff)
     return eff, err_low, err_up
 
 def GetEfficiency_Simple(n_initial,df_vbf, deeptau_thr, pt_thr):
-    # df_vbf = df_vbf.Define('ntaus_den','getNtaus(deepTau_VSjet,tau_pt,{},{})'.format(0,0))
-    # df_vbf_den = df_vbf.Filter('ntaus_den >= 2')#to bechanged to 2!!!
-    # n_events = df_vbf_den.Count()
+    df_vbf = df_vbf.Define('ntaus_den','getNtaus_original(tau_pt)')
+    df_vbf_den = df_vbf.Filter('ntaus_den >= 2')#to bechanged to 2!!!
+    n_events = df_vbf_den.Count()
     df_vbf = df_vbf.Define('ntaus','getNtaus(deepTau_VSjet,tau_pt,{},{})'.format(deeptau_thr,pt_thr))
     df_vbf_num = df_vbf.Filter('ntaus >= 2')#to bechanged to 2!!!
     n_events_passed = df_vbf_num.Count()
-    eff = (float(n_events_passed.GetValue())/float(n_initial))
-    ci = proportion_confint(count=n_events_passed.GetValue(), nobs=n_initial, alpha=0.32, method='beta')
+    eff = (float(n_events_passed.GetValue())/float(n_events.GetValue()))
+    ci = proportion_confint(count=n_events_passed.GetValue(), nobs=n_events.GetValue(), alpha=0.32, method='beta')
     err_low = (eff - ci[0])
     err_up = (ci[1] - eff)
     return eff, err_low, err_up
@@ -98,61 +98,61 @@ def BaseRate_complete(n_initial, df_zb, pt_thr):
     return rate_l, err_low_l, err_up_l, rate_m, err_low_m, err_up_m, rate_t, err_low_t, err_up_t
 
 def BaseEfficiency_Simple(n_initial,df_vbf,pt_thr):
-    # df_vbf = df_vbf.Define('ntaus_den','getNtaus(deepTau_VSjet,tau_pt,{},{})'.format(0,0))
-    # df_vbf_den = df_vbf.Filter('ntaus_den >= 2')#to bechanged to 2!!!
-    # n_events = df_vbf_den.Count()
+    df_vbf = df_vbf.Define('ntaus_den','getNtaus_original(tau_pt)')
+    df_vbf_den = df_vbf.Filter('ntaus_den >= 2')#to bechanged to 2!!!
+    n_events = df_vbf_den.Count()
     #medium
     df_vbf_m = df_vbf.Define('ntaus_m','getNtaus_base(tau_mediumIsoAbs,tau_mediumIsoRel,tau_pt,{})'.format(pt_thr))
     df_vbf_m = df_vbf_m.Filter('ntaus_m >= 2')#to bechanged to 2!!!
     n_events_passed_m = df_vbf_m.Count()
-    eff_m = (float(n_events_passed_m.GetValue())/float(n_initial))
-    ci_m = proportion_confint(count=n_events_passed_m.GetValue(), nobs=n_initial, alpha=0.32, method='beta')
+    eff_m = (float(n_events_passed_m.GetValue())/float(n_events.GetValue()))
+    ci_m = proportion_confint(count=n_events_passed_m.GetValue(), nobs=n_events.GetValue(), alpha=0.32, method='beta')
     err_low_m = (eff_m - ci_m[0])
     err_up_m = (ci_m[1] - eff_m)
     #loose
     df_vbf_l = df_vbf.Define('ntaus_l','getNtaus_base_loose(tau_looseIsoAbs,tau_looseIsoRel,tau_pt,{})'.format(pt_thr))
     df_vbf_l = df_vbf_l.Filter('ntaus_l >= 2')#to bechanged to 2!!!
     n_events_passed_l = df_vbf_l.Count()
-    eff_l = (float(n_events_passed_l.GetValue())/float(n_initial))
-    ci_l = proportion_confint(count=n_events_passed_l.GetValue(), nobs=n_initial, alpha=0.32, method='beta')
+    eff_l = (float(n_events_passed_l.GetValue())/float(n_events.GetValue()))
+    ci_l = proportion_confint(count=n_events_passed_l.GetValue(), nobs=n_events.GetValue(), alpha=0.32, method='beta')
     err_low_l = (eff_l - ci_l[0])
     err_up_l = (ci_l[1] - eff_l)
     #tight
     df_vbf_t = df_vbf.Define('ntaus_t','getNtaus_base_tight(tau_tightIsoAbs,tau_tightIsoRel,tau_pt,{})'.format(pt_thr))
     df_vbf_t = df_vbf_t.Filter('ntaus_t >= 2')#to bechanged to 2!!!
     n_events_passed_t = df_vbf_t.Count()
-    eff_t = (float(n_events_passed_t.GetValue())/float(n_initial))
-    ci_t = proportion_confint(count=n_events_passed_t.GetValue(), nobs=n_initial, alpha=0.32, method='beta')
+    eff_t = (float(n_events_passed_t.GetValue())/float(n_events.GetValue()))
+    ci_t = proportion_confint(count=n_events_passed_t.GetValue(), nobs=n_events.GetValue(), alpha=0.32, method='beta')
     err_low_t = (eff_t - ci_t[0])
     err_up_t = (ci_t[1] - eff_t)
     return eff_l, err_low_l, err_up_l, eff_m, err_low_m, err_up_m, eff_t, err_low_t, err_up_t
 
 def BaseEfficiency(n_initial,df_vbf,pt_thr,pt_bin_1,pt_bin_2):
-    # df_vbf = df_vbf.Define('ntaus_den','getNtaus_inPtBin(deepTau_VSjet,tau_pt,{},{},{},{})'.format(0,0,pt_bin_1,pt_bin_2))
-    # df_vbf_den = df_vbf.Filter('ntaus_den >= 2')#to bechanged to 2!!!
-    # n_events = df_vbf_den.Count()
+    df_vbf = df_vbf.Define('ntaus_den','getNtaus_inPtBin(deepTau_VSjet,tau_pt,{},{},{},{})'.format(0,0,pt_bin_1,pt_bin_2))
+    df_vbf_den = df_vbf.Filter('ntaus_den >= 2')#to bechanged to 2!!!
+    n_events = df_vbf_den.Count()
     #medium
     df_vbf_m = df_vbf.Define('ntaus_m','getNtaus_base_inPtBin_Medium(tau_mediumIsoAbs,tau_mediumIsoRel,tau_pt,{},{},{})'.format(pt_thr,pt_bin_1,pt_bin_2))
     df_vbf_m = df_vbf_m.Filter('ntaus_m >= 2')#to bechanged to 2!!!
     n_events_passed_m = df_vbf_m.Count()
-    eff_m = (float(n_events_passed_m.GetValue())/float(n_initial))
-    ci_m = proportion_confint(count=n_events_passed_m.GetValue(), nobs=n_initial, alpha=0.32, method='beta')
+    eff_m = (float(n_events_passed_m.GetValue())/float(n_events.GetValue()))
+    ci_m = proportion_confint(count=n_events_passed_m.GetValue(), nobs=n_events.GetValue(), alpha=0.32, method='beta')
     err_low_m = (eff_m - ci_m[0])
     err_up_m = (ci_m[1] - eff_m)
     #loose
     df_vbf_l = df_vbf.Define('ntaus_l','getNtaus_base_inPtBin_Loose(tau_looseIsoAbs,tau_looseIsoRel,tau_pt,{},{},{})'.format(pt_thr,pt_bin_1,pt_bin_2))
     df_vbf_l = df_vbf_l.Filter('ntaus_l >= 2')#to bechanged to 2!!!
     n_events_passed_l = df_vbf_l.Count()
-    eff_l = (float(n_events_passed_l.GetValue())/float(n_initial))
-    ci_l = proportion_confint(count=n_events_passed_l.GetValue(), nobs=n_initial, alpha=0.32, method='beta')
+    eff_l = (float(n_events_passed_l.GetValue())/float(n_events.GetValue()))
+    ci_l = proportion_confint(count=n_events_passed_l.GetValue(), nobs=n_events.GetValue(), alpha=0.32, method='beta')
     err_low_l = (eff_l - ci_l[0])
     err_up_l = (ci_l[1] - eff_l)
     #tight
     df_vbf_t = df_vbf.Define('ntaus_t','getNtaus_base_inPtBin_Tight(tau_tightIsoAbs,tau_tightIsoRel,tau_pt,{},{},{})'.format(pt_thr,pt_bin_1,pt_bin_2))
     df_vbf_t = df_vbf_t.Filter('ntaus_t >= 2')#to bechanged to 2!!!
     n_events_passed_t = df_vbf_t.Count()
-    eff_t = (float(n_events_passed_t.GetValue())/float(n_initial))
-    ci_t = proportion_confint(count=n_events_passed_t.GetValue(), nobs=n_initial, alpha=0.32, method='beta')
+    eff_t = (float(n_events_passed_t.GetValue())/float(n_events.GetValue()))
+    ci_t = proportion_confint(count=n_events_passed_t.GetValue(), nobs=n_events.GetValue(), alpha=0.32, method='beta')
     err_low_t = (eff_t - ci_t[0])
     err_up_t = (ci_t[1] - eff_t)
     return eff_l, err_low_l, err_up_l, eff_m, err_low_m, err_up_m, eff_t, err_low_t, err_up_t
@@ -219,9 +219,6 @@ for thr_index in range(len(pt_thrs)):
 fig_eff = plt.figure()
 ax_eff = fig_eff.add_subplot(111)
 
-fig_rate = plt.figure()
-ax_rate = fig_rate.add_subplot(111)
-
 
 if not tfile.IsZombie() and not tfile_rate.IsZombie():
     f_eff = ROOT.TFile.Open(eff_name)
@@ -248,15 +245,12 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
     initialCounter_rate = f_rate.Get("initial_counter_hist")
 
     fix_eff = []
-    fix_rate = []
     base_rate, base_err_low, base_err_up = BaseRate(initialCounter_rate.GetEntries(),df_rate,35)
     print("Base Rate: ", base_rate)
     print("Base Rate error low: ", base_err_low)
     print("Base Rate error up: ", base_err_up)
     base_eff_l, base_eff_err_low_l, base_eff_err_up_l, base_eff_m, base_eff_err_low_m, base_eff_err_up_m, base_eff_t, base_eff_err_low_t, base_eff_err_up_t=BaseEfficiency_Simple(initialCounter_eff.GetEntries(),df_eff,35)
     print("Eff base: ", base_eff_m)
-    print("Base Eff error low: ", base_eff_err_low_m)
-    print("Base Eff error up: ", base_eff_err_up_m)
     for thr_index in range(len(pt_thrs)):
         print("pt_thr: ",pt_thrs[thr_index])
         efficiency = []
@@ -286,7 +280,7 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
             base_eff_l_2, base_eff_err_low_l_2, base_eff_err_up_l_2, base_eff_m_2, base_eff_err_low_m_2, base_eff_err_up_m_2, base_eff_t_2, base_eff_err_low_t_2, base_eff_err_up_t_2=BaseEfficiency_Simple(initialCounter_eff.GetEntries(),df_eff,35)
             return eff_value-base_eff_m_2
 
-        solution_2 = optimize.root_scalar(f_2,bracket=[0,100],method='bisect')
+        solution_2 = optimize.root_scalar(f_2,bracket=[0,1],method='bisect')
         deep_thr_2 = solution_2.root
 
         print("deepTau thr at the fixed eff for 35 GeV for cut based Medium: ", deep_thr_2)
