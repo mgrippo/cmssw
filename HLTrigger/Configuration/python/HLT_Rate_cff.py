@@ -13327,48 +13327,52 @@ fragment.initialFilter = cms.EDFilter( "CounterFilter",
     genParticles = cms.InputTag('genParticles')
 )
 
-fragment.afterL1Filter = cms.EDFilter( "CounterFilter",
-    isMC = cms.bool(False), #from outside
-    store_hist = cms.bool(True), #from outside
-    store_both = cms.bool(False), #from outside
-    position = cms.string("afterL1Filter"),
-    deepTauVSe = cms.InputTag('try1'),
-    deepTauVSmu = cms.InputTag('try2'),
-    deepTauVSjet = cms.InputTag('try3'),
-    mediumIsoAbs = cms.InputTag('try4'),
-    mediumIsoRel = cms.InputTag('try5'),
-    looseIsoAbs  = cms.InputTag('try10'),
-    looseIsoRel  = cms.InputTag('try11'),
-    tightIsoAbs  = cms.InputTag('try12'),
-    tightIsoRel  = cms.InputTag('try13'),
-    original_taus = cms.InputTag('try15'),
-    taus = cms.InputTag('try6'),
-    puInfo = cms.InputTag('try7'),
-    vertices = cms.InputTag('try8'),
-    decayModeFindingNewDM = cms.InputTag('try9'),
-    genParticles = cms.InputTag('try14')
+fragment.afterBeginSequence = fragment.initialFilter.clone(
+    position = cms.string("afterBeginSequence"),
 )
 
-fragment.intermidiateFilter = cms.EDFilter( "CounterFilter",
-    isMC = cms.bool(False), #from outside
-    store_hist = cms.bool(True), #from outside
-    store_both = cms.bool(False), #from outside
-    position = cms.string("intermidiate"),
-    deepTauVSe = cms.InputTag('deepTauProducer','VSe'),
-    deepTauVSmu = cms.InputTag('deepTauProducer','VSmu'),
-    deepTauVSjet = cms.InputTag('deepTauProducer','VSjet'),
-    mediumIsoAbs = cms.InputTag('hltHpsPFTauMediumAbsoluteChargedIsolationDiscriminatorReg'),
-    mediumIsoRel = cms.InputTag('hltHpsPFTauMediumRelativeChargedIsolationDiscriminatorReg'),
-    looseIsoAbs  = cms.InputTag('hltHpsPFTauLooseAbsoluteChargedIsolationDiscriminator'),
-    looseIsoRel  = cms.InputTag('hltHpsPFTauLooseRelativeChargedIsolationDiscriminator'),
-    tightIsoAbs  = cms.InputTag('hltHpsPFTauTightAbsoluteChargedIsolationDiscriminatorReg'),
-    tightIsoRel  = cms.InputTag('hltHpsPFTauTightRelativeChargedIsolationDiscriminatorReg'),
-    original_taus = cms.InputTag('hltHpsPFTauProducerReg'),
-    taus = cms.InputTag('hltHpsPFTauProducerReg'),
-    puInfo = cms.InputTag('addPileupInfo','','HLT'),
-    vertices = cms.InputTag('hltPixelVertices'),
-    decayModeFindingNewDM = cms.InputTag('hltHpsPFTauDiscriminationByDecayModeFindingNewDMsReg'),
-    genParticles = cms.InputTag('genParticles')
+fragment.afterL1Filter = fragment.initialFilter.clone(
+    position = cms.string("afterL1Filter"),
+)
+
+fragment.afterPreDoubleMediumChargedIsoPFTauHPS35Trk1eta2p1Reg = fragment.initialFilter.clone(
+    position = cms.string("afterPreDoubleMediumChargedIsoPFTauHPS35Trk1eta2p1Reg"),
+)
+
+fragment.afterL2TauJetsL1TauSeededSequence = fragment.initialFilter.clone(
+    position = cms.string("afterL2TauJetsL1TauSeededSequence"),
+)
+
+fragment.afterDoubleL2Tau26eta2p2 = fragment.initialFilter.clone(
+    position = cms.string("afterDoubleL2Tau26eta2p2"),
+)
+
+fragment.afterL2p5IsoTauL1TauSeededSequence = fragment.initialFilter.clone(
+    position = cms.string("afterL2p5IsoTauL1TauSeededSequence"),
+)
+
+fragment.afterDoubleL2IsoTau26eta2p2 = fragment.initialFilter.clone(
+    position = cms.string("afterDoubleL2IsoTau26eta2p2"),
+)
+
+fragment.afterRegionalPFTauHPSSequence = fragment.initialFilter.clone(
+    position = cms.string("afterRegionalPFTauHPSSequence"),
+)
+
+fragment.afterHPSDoublePFTauPt35Eta2p1Trk1Reg  = fragment.initialFilter.clone(
+    position = cms.string("afterHPSDoublePFTauPt35Eta2p1Trk1Reg"),
+)
+
+fragment.afterHpsDoublePFTau35TrackPt1MediumChargedIsolationReg = fragment.initialFilter.clone(
+    position = cms.string("afterHpsDoublePFTau35TrackPt1MediumChargedIsolationReg"),
+)
+
+fragment.afterHpsL1JetsHLTDoublePFTauTrackPt1MediumChargedIsolationMatchReg = fragment.initialFilter.clone(
+    position = cms.string("afterHpsL1JetsHLTDoublePFTauTrackPt1MediumChargedIsolationMatchReg"),
+)
+
+fragment.afterHpsDoublePFTau35TrackPt1MediumChargedIsolationL1HLTMatchedReg = fragment.initialFilter.clone(
+    position = cms.string("afterHpsDoublePFTau35TrackPt1MediumChargedIsolationL1HLTMatchedReg"),
 )
 
 fragment.finalFilter = cms.EDFilter( "CounterFilter",
@@ -14753,12 +14757,12 @@ fragment.HLTPFJetTriggerSequenceReg = cms.Sequence( fragment.HLTL2muonrecoSequen
 fragment.HLTPFTauHPSReg = cms.Sequence( fragment.hltTauPFJets08RegionReg + fragment.hltHpsTauPFJetsRecoTauChargedHadronsWithNeutralsReg + fragment.hltPFTauPiZerosReg + fragment.hltHpsCombinatoricRecoTausReg + fragment.hltHpsSelectionDiscriminatorReg + fragment.hltHpsPFTauProducerSansRefsReg + fragment.hltHpsPFTauProducerReg + fragment.hltHpsPFTauDiscriminationByDecayModeFindingNewDMsReg + fragment.hltHpsPFTauTrackFindingDiscriminatorReg + fragment.hltHpsSelectedPFTausTrackFindingReg + fragment.hltHpsPFTauTrackReg )
 fragment.HLTHPSMediumChargedIsoPFTauSequenceReg = cms.Sequence( fragment.hltHpsPFTauMediumAbsoluteChargedIsolationDiscriminatorReg + fragment.hltHpsPFTauLooseAbsoluteChargedIsolationDiscriminator + fragment.hltHpsPFTauLooseRelativeChargedIsolationDiscriminator + fragment.hltHpsPFTauMediumRelativeChargedIsolationDiscriminatorReg +fragment.hltHpsPFTauTightAbsoluteChargedIsolationDiscriminatorReg + fragment.hltHpsPFTauTightRelativeChargedIsolationDiscriminatorReg)
 fragment.HLTRegionalPFTauHPSSequence = cms.Sequence( fragment.hltStripTrackerHVOn + fragment.hltPixelTrackerHVOn + fragment.HLTRecoJetSequenceAK4PrePF + fragment.HLTPFJetTriggerSequenceReg + fragment.HLTPFTauHPSReg )
-fragment.HLTHPSDoublePFTauPt35Eta2p1Trk1Reg = cms.Sequence( fragment.hltHpsDoublePFTau35Reg + fragment.hltHpsPFTauTrackPt1DiscriminatorReg + fragment.hltHpsSelectedPFTausTrackPt1Reg + fragment.hltHpsDoublePFTau35TrackPt1Reg + fragment.hltFixedGridRhoFastjetAll +  fragment.hltRechitInRegionsECAL + fragment.hltParticleFlowRecHitECALL1Seeded + fragment.hltParticleFlowClusterECALUncorrectedL1Seeded + fragment.hltRechitInRegionsES + fragment.hltParticleFlowRecHitPSL1Seeded + fragment.hltParticleFlowClusterPSL1Seeded + fragment.hltParticleFlowClusterECALL1Seeded + fragment.hltParticleFlowSuperClusterECALL1Seeded + fragment.hltEgammaCandidates + fragment.hpsPFTauPrimaryVertexProducer + fragment.hpsPFTauSecondaryVertexProducer + fragment.hpsPFTauTransverseImpactParameters + fragment.pfRecoTauDiscriminationByLeadingTrackFinding + fragment.chargedIsoPtSum + fragment.chargedIsoPtSumdR03 + fragment.neutralIsoPtSum + fragment.neutralIsoPtSumdR03 + fragment.puCorrPtSum + fragment.footprintCorrection + fragment.footprintCorrectiondR03 + fragment.neutralIsoPtSumWeight + fragment.neutralIsoPtSumWeightdR03 + fragment.photonPtSumOutsideSignalCone + fragment.photonPtSumOutsideSignalConedR03 + fragment.deepTauProducer + fragment.intermidiateFilter)
+fragment.HLTHPSDoublePFTauPt35Eta2p1Trk1Reg = cms.Sequence( fragment.hltHpsDoublePFTau35Reg + fragment.hltHpsPFTauTrackPt1DiscriminatorReg + fragment.hltHpsSelectedPFTausTrackPt1Reg + fragment.hltHpsDoublePFTau35TrackPt1Reg + fragment.hltFixedGridRhoFastjetAll +  fragment.hltRechitInRegionsECAL + fragment.hltParticleFlowRecHitECALL1Seeded + fragment.hltParticleFlowClusterECALUncorrectedL1Seeded + fragment.hltRechitInRegionsES + fragment.hltParticleFlowRecHitPSL1Seeded + fragment.hltParticleFlowClusterPSL1Seeded + fragment.hltParticleFlowClusterECALL1Seeded + fragment.hltParticleFlowSuperClusterECALL1Seeded + fragment.hltEgammaCandidates + fragment.hpsPFTauPrimaryVertexProducer + fragment.hpsPFTauSecondaryVertexProducer + fragment.hpsPFTauTransverseImpactParameters + fragment.pfRecoTauDiscriminationByLeadingTrackFinding + fragment.chargedIsoPtSum + fragment.chargedIsoPtSumdR03 + fragment.neutralIsoPtSum + fragment.neutralIsoPtSumdR03 + fragment.puCorrPtSum + fragment.footprintCorrection + fragment.footprintCorrectiondR03 + fragment.neutralIsoPtSumWeight + fragment.neutralIsoPtSumWeightdR03 + fragment.photonPtSumOutsideSignalCone + fragment.photonPtSumOutsideSignalConedR03 + fragment.deepTauProducer )
 
 fragment.HLTEndSequence = cms.Sequence( fragment.hltBoolEnd )
 
 fragment.HLTriggerFirstPath = cms.Path( fragment.hltGetConditions + fragment.hltGetRaw + fragment.hltBoolFalse )
-fragment.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4 = cms.Path( fragment.HLTBeginSequence + fragment.hltL1sDoubleTauBigOR + fragment.afterL1Filter + fragment.hltPreDoubleMediumChargedIsoPFTauHPS35Trk1eta2p1Reg + fragment.HLTL2TauJetsL1TauSeededSequence + fragment.hltDoubleL2Tau26eta2p2 + fragment.HLTL2p5IsoTauL1TauSeededSequence + fragment.hltDoubleL2IsoTau26eta2p2 + fragment.HLTRegionalPFTauHPSSequence + fragment.HLTHPSMediumChargedIsoPFTauSequenceReg + fragment.HLTHPSDoublePFTauPt35Eta2p1Trk1Reg  + fragment.hltHpsDoublePFTau35TrackPt1MediumChargedIsolationReg + fragment.hltHpsL1JetsHLTDoublePFTauTrackPt1MediumChargedIsolationMatchReg + fragment.hltHpsDoublePFTau35TrackPt1MediumChargedIsolationL1HLTMatchedReg + fragment.hltHpsDoublePFTau35TrackPt1MediumChargedIsolationDz02Reg + fragment.finalFilter + fragment.HLTEndSequence )
+fragment.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4 = cms.Path( fragment.HLTBeginSequence + fragment.afterBeginSequence + fragment.hltL1sDoubleTauBigOR + fragment.afterL1Filter + fragment.hltPreDoubleMediumChargedIsoPFTauHPS35Trk1eta2p1Reg + fragment.afterPreDoubleMediumChargedIsoPFTauHPS35Trk1eta2p1Reg + fragment.HLTL2TauJetsL1TauSeededSequence + fragment.afterL2TauJetsL1TauSeededSequence + fragment.hltDoubleL2Tau26eta2p2 + fragment.afterDoubleL2Tau26eta2p2 + fragment.HLTL2p5IsoTauL1TauSeededSequence + fragment.afterL2p5IsoTauL1TauSeededSequence + fragment.hltDoubleL2IsoTau26eta2p2 + fragment.afterDoubleL2IsoTau26eta2p2 + fragment.HLTRegionalPFTauHPSSequence + fragment.afterRegionalPFTauHPSSequence + fragment.HLTHPSMediumChargedIsoPFTauSequenceReg + fragment.HLTHPSDoublePFTauPt35Eta2p1Trk1Reg + fragment.afterHPSDoublePFTauPt35Eta2p1Trk1Reg  + fragment.hltHpsDoublePFTau35TrackPt1MediumChargedIsolationReg + fragment.afterHpsDoublePFTau35TrackPt1MediumChargedIsolationReg + fragment.hltHpsL1JetsHLTDoublePFTauTrackPt1MediumChargedIsolationMatchReg + fragment.afterHpsL1JetsHLTDoublePFTauTrackPt1MediumChargedIsolationMatchReg + fragment.hltHpsDoublePFTau35TrackPt1MediumChargedIsolationL1HLTMatchedReg + fragment.afterHpsDoublePFTau35TrackPt1MediumChargedIsolationL1HLTMatchedReg + fragment.hltHpsDoublePFTau35TrackPt1MediumChargedIsolationDz02Reg + fragment.finalFilter + fragment.HLTEndSequence )
 fragment.HLTriggerFinalPath = cms.Path( fragment.hltGtStage2Digis + fragment.hltScalersRawToDigi + fragment.hltFEDSelector + fragment.hltTriggerSummaryAOD + fragment.hltTriggerSummaryRAW + fragment.hltBoolFalse )
 fragment.HLTAnalyzerEndpath = cms.EndPath( fragment.hltGtStage2Digis + fragment.hltPreHLTAnalyzerEndpath + fragment.hltL1TGlobalSummary + fragment.hltTrigReport )
 

@@ -27,22 +27,6 @@ def GetRate(n_initial, df_zb, deeptau_thr, pt_thr):
     err_up = (ci[1]*73455.3448 - rate)
     return rate, err_low, err_up
 
-def GetEfficiency(n_initial,df_vbf, deeptau_thr, pt_thr,pt_bin_1,pt_bin_2):
-    # df_vbf = df_vbf.Define('ntaus_den','getNtaus_inPtBin(deepTau_VSjet,tau_pt,{},{},{},{})'.format(0,0,pt_bin_1,pt_bin_2))
-    # df_vbf_den = df_vbf.Filter('ntaus_den >= 2')#to bechanged to 2!!!
-    # n_events = df_vbf_den.Count()
-    df_vbf = df_vbf.Define('ntaus','getNtaus_inPtBin(deepTau_VSjet,tau_pt,{},{},{},{})'.format(deeptau_thr,pt_thr,pt_bin_1,pt_bin_2))
-    df_vbf_num = df_vbf.Filter('ntaus >= 2')#to bechanged to 2!!!
-    n_events_passed = df_vbf_num.Count()
-    #print("nevents: ",n_events.GetValue())
-    #print("n_events_passed: ",n_events_passed.GetValue())
-    eff = (float(n_events_passed.GetValue())/float(n_initial))
-    #print("eff: %2f "%(eff))
-    ci = proportion_confint(count=n_events_passed.GetValue(), nobs=n_initial, alpha=0.32, method='beta')
-    err_low = (eff - ci[0])
-    err_up = (ci[1] - eff)
-    return eff, err_low, err_up
-
 def GetEfficiency_Simple(n_initial,df_vbf, deeptau_thr, pt_thr):
     # df_vbf = df_vbf.Define('ntaus_den','getNtaus(deepTau_VSjet,tau_pt,{},{})'.format(0,0))
     # df_vbf_den = df_vbf.Filter('ntaus_den >= 2')#to bechanged to 2!!!
@@ -127,36 +111,6 @@ def BaseEfficiency_Simple(n_initial,df_vbf,pt_thr):
     err_up_t = (ci_t[1] - eff_t)
     return eff_l, err_low_l, err_up_l, eff_m, err_low_m, err_up_m, eff_t, err_low_t, err_up_t
 
-def BaseEfficiency(n_initial,df_vbf,pt_thr,pt_bin_1,pt_bin_2):
-    # df_vbf = df_vbf.Define('ntaus_den','getNtaus_inPtBin(deepTau_VSjet,tau_pt,{},{},{},{})'.format(0,0,pt_bin_1,pt_bin_2))
-    # df_vbf_den = df_vbf.Filter('ntaus_den >= 2')#to bechanged to 2!!!
-    # n_events = df_vbf_den.Count()
-    #medium
-    df_vbf_m = df_vbf.Define('ntaus_m','getNtaus_base_inPtBin_Medium(tau_mediumIsoAbs,tau_mediumIsoRel,tau_pt,{},{},{})'.format(pt_thr,pt_bin_1,pt_bin_2))
-    df_vbf_m = df_vbf_m.Filter('ntaus_m >= 2')#to bechanged to 2!!!
-    n_events_passed_m = df_vbf_m.Count()
-    eff_m = (float(n_events_passed_m.GetValue())/float(n_initial))
-    ci_m = proportion_confint(count=n_events_passed_m.GetValue(), nobs=n_initial, alpha=0.32, method='beta')
-    err_low_m = (eff_m - ci_m[0])
-    err_up_m = (ci_m[1] - eff_m)
-    #loose
-    df_vbf_l = df_vbf.Define('ntaus_l','getNtaus_base_inPtBin_Loose(tau_looseIsoAbs,tau_looseIsoRel,tau_pt,{},{},{})'.format(pt_thr,pt_bin_1,pt_bin_2))
-    df_vbf_l = df_vbf_l.Filter('ntaus_l >= 2')#to bechanged to 2!!!
-    n_events_passed_l = df_vbf_l.Count()
-    eff_l = (float(n_events_passed_l.GetValue())/float(n_initial))
-    ci_l = proportion_confint(count=n_events_passed_l.GetValue(), nobs=n_initial, alpha=0.32, method='beta')
-    err_low_l = (eff_l - ci_l[0])
-    err_up_l = (ci_l[1] - eff_l)
-    #tight
-    df_vbf_t = df_vbf.Define('ntaus_t','getNtaus_base_inPtBin_Tight(tau_tightIsoAbs,tau_tightIsoRel,tau_pt,{},{},{})'.format(pt_thr,pt_bin_1,pt_bin_2))
-    df_vbf_t = df_vbf_t.Filter('ntaus_t >= 2')#to bechanged to 2!!!
-    n_events_passed_t = df_vbf_t.Count()
-    eff_t = (float(n_events_passed_t.GetValue())/float(n_initial))
-    ci_t = proportion_confint(count=n_events_passed_t.GetValue(), nobs=n_initial, alpha=0.32, method='beta')
-    err_low_t = (eff_t - ci_t[0])
-    err_up_t = (ci_t[1] - eff_t)
-    return eff_l, err_low_l, err_up_l, eff_m, err_low_m, err_up_m, eff_t, err_low_t, err_up_t
-
 def CalculateErrorEff(n_passed,n_initial,eff):
     ci = proportion_confint(count=n_passed, nobs=n_initial, alpha=0.32, method='beta')
     err_low = (eff - ci[0])
@@ -165,6 +119,7 @@ def CalculateErrorEff(n_passed,n_initial,eff):
 
 pt_bins = np.array([20,25,30,35,40,45,50,60,70,100,150,200, 300, 400, 500])
 pt_thrs = [20,25,30,35,40,45]
+pt_thrs_new = [20,25,30,35,40]
 
 deeptau_thrs = np.linspace(0.0, 1.0, num=100)
 eff_name="full_VBF/vbf_full.root"
@@ -173,12 +128,6 @@ rate_name="full_Ephemeral/ephemeral_full.root"
 RDF = ROOT.ROOT.RDataFrame
 df_eff = RDF("final_counter", eff_name)
 df_rate = RDF("final_counter", rate_name)
-
-# canvas1 = ROOT.TCanvas("pippo1","pippo1")
-# canvas1.cd()
-# myHisto = df_eff.Histo1D("tau_pt")
-# myHisto.Draw()
-# canvas1.Print("pt_dataFrame.pdf")
 
 tfile = ROOT.TFile(eff_name)
 tfile_rate = ROOT.TFile(rate_name)
@@ -279,57 +228,25 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
 
         print("deepTau thr at the fixed rate for 35 GeV for cut based Medium: ", deep_thr)
         fixed_eff_value, fixed_err_low_eff, fixed_err_up_eff = GetEfficiency_Simple(initialCounter_eff.GetEntries(),df_eff,deep_thr,pt_thrs[thr_index])
+        #dummy_eff_value, dummy_err_low_eff, dummy_err_up_eff = GetEfficiency_Simple(initialCounter_eff.GetEntries(),df_eff,1,pt_thrs[thr_index])
         fix_eff.append(fixed_eff_value)
+        #print("dummy eff: ",dummy_eff_value)
 
-        def f_2(deeptau_thr):
-            eff_value, err_low_eff, err_up_eff = GetEfficiency_Simple(initialCounter_eff.GetEntries(),df_eff,deep_thr,pt_thrs[thr_index])
-            base_eff_l_2, base_eff_err_low_l_2, base_eff_err_up_l_2, base_eff_m_2, base_eff_err_low_m_2, base_eff_err_up_m_2, base_eff_t_2, base_eff_err_low_t_2, base_eff_err_up_t_2=BaseEfficiency_Simple(initialCounter_eff.GetEntries(),df_eff,35)
-            return eff_value-base_eff_m_2
+        if(pt_thrs[thr_index] < 45):
+            def f_2(deeptau_thr_2):
+                eff_value, err_low_eff, err_up_eff = GetEfficiency_Simple(initialCounter_eff.GetEntries(),df_eff,deeptau_thr_2,pt_thrs[thr_index])
+                base_eff_l_2, base_eff_err_low_l_2, base_eff_err_up_l_2, base_eff_m_2, base_eff_err_low_m_2, base_eff_err_up_m_2, base_eff_t_2, base_eff_err_low_t_2, base_eff_err_up_t_2=BaseEfficiency_Simple(initialCounter_eff.GetEntries(),df_eff,35)
+                #print('debug:',eff_value,"-",base_eff_m_2,"-",deeptau_thr_2,"-",pt_thrs[thr_index])
+                return eff_value-base_eff_m_2
 
-        solution_2 = optimize.root_scalar(f_2,bracket=[0,100],method='bisect')
-        deep_thr_2 = solution_2.root
+            solution_2 = optimize.root_scalar(f_2,bracket=[0,1],method='bisect')
+            deep_thr_2 = solution_2.root
 
-        print("deepTau thr at the fixed eff for 35 GeV for cut based Medium: ", deep_thr_2)
-        fixed_rate_value, fixed_err_low_rate, fixed_err_up_rate = GetRate(initialCounter_rate.GetEntries(),df_rate,deep_thr_2,pt_thrs[thr_index])
-        fix_rate.append(fixed_rate_value)
+            print("deepTau thr at the fixed eff for 35 GeV for cut based Medium: ", deep_thr_2)
+            fixed_rate_value, fixed_err_low_rate, fixed_err_up_rate = GetRate(initialCounter_rate.GetEntries(),df_rate,deep_thr_2,pt_thrs[thr_index])
+            fix_rate.append(fixed_rate_value)
         #deep_thr = 0 #to check eff is equal to 100%
-        #print("Deeptau thr: ",deep_thr)
-        # initial_rate.append(GetRate(initialCounter_rate.GetEntries(),df_rate,0,35))
-        # max_rate.append(GetRate(initialCounter_rate.GetEntries(),df_rate,1,thr))
-        # for pt_index in range(len(pt_bins) - 1):
-        #     #eff vs pt for deep
-        #
-        #     print("pt_bin [ ",pt_bins[pt_index],",",pt_bins[pt_index + 1],"]")
-        #
-        #     error_pt_value = (pt_bins[pt_index + 1] - pt_bins[pt_index])/2
-        #     pt_error[0,pt_index]=error_pt_value
-        #     pt_error[1,pt_index]=error_pt_value
-        #     eff, err_low, err_up =GetEfficiency(initialCounter_eff.GetEntries(),df_eff,deep_thr,pt_thrs[thr_index],pt_bins[pt_index],pt_bins[pt_index + 1])
-        #     #print("efficiency: ", eff)
-        #     efficiency.append(eff)
-        #     error_efficiency[0,pt_index]=err_low
-        #     error_efficiency[1,pt_index]=err_up
-        #
-        #     #eff vs pt for base
-        #     eff_l, err_low_l, err_up_l, eff_m, err_low_m, err_up_m, eff_t, err_low_t, err_up_t=BaseEfficiency(initialCounter_eff.GetEntries(),df_eff,35,pt_bins[pt_index],pt_bins[pt_index + 1])
-        #     efficiency_base_l.append(eff_l)
-        #     error_efficiency_l[0,pt_index]=err_low_l
-        #     error_efficiency_l[1,pt_index]=err_up_l
-        #     efficiency_base_m.append(eff_m)
-        #     error_efficiency_m[0,pt_index]=err_low_m
-        #     error_efficiency_m[1,pt_index]=err_up_m
-        #     efficiency_base_t.append(eff_t)
-        #     error_efficiency_t[0,pt_index]=err_low_t
-        #     error_efficiency_t[1,pt_index]=err_up_t
-        #
-        # efficiency_total[thr_index]=efficiency
-        # error_efficiency_total[thr_index]=error_efficiency
-        # error_pt_total[thr_index]=pt_error
-        # ax1.errorbar((pt_bins[1:] + pt_bins[:-1]) / 2,efficiency_total[thr_index],yerr=error_efficiency_total[thr_index], xerr=error_pt_total[thr_index], ls='none', label=str(pt_thrs[thr_index])+' GeV') #non disegna le 4 curve per ogni thr
-        # ax1.set_title('Efficiency vs pt for a given cut based rate for deepTau discriminator')
-        # ax1.set_ylabel('Efficiency')
-        # ax1.set_xlabel('Pt [GeV]')
-        # ax1.legend()
+
         ###################### from here
         #eff vs rate deep
         deep_rate = []
@@ -355,12 +272,7 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
         full_deep_eff_err[thr_index] = error_deep_eff
         #################
 
-        # ax3.errorbar(full_deep_rate[thr_index], full_deep_eff[thr_index], yerr=full_deep_eff_err[thr_index], xerr=full_deep_rate_err[thr_index], marker='o', linestyle='--', label=str(pt_thrs[thr_index])+' GeV')
-        # ax3.xlim([0, 70])
-        # ax3.set_title('Efficiency vs rate for deepTau discriminator')
-        # ax3.set_ylabel('Efficiency')
-        # ax3.set_xlabel('Rate [Hz]')
-        # ax3.legend(loc='lower right')
+
         ############## from here
         eff_l, eff_err_low_l, eff_err_up_l, eff_m, eff_err_low_m, eff_err_up_m, eff_t, eff_err_low_t, eff_err_up_t=BaseEfficiency_Simple(initialCounter_eff.GetEntries(),df_eff,pt_thrs[thr_index])
         rate_l, rate_err_low_l, rate_err_up_l, rate_m, rate_err_low_m, rate_err_up_m, rate_t, rate_err_low_t, rate_err_up_t=BaseRate_complete(initialCounter_rate.GetEntries(),df_rate,pt_thrs[thr_index])
@@ -384,21 +296,7 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
         rate_error_t[0,thr_index]=rate_err_low_t
         rate_error_t[1,thr_index]=rate_err_up_t
         ###########
-        # ax4.errorbar(rate_total_l[thr_index],efficiency_l[thr_index],yerr=efficiency_error_l[:,thr_index].reshape((2, 1)),xerr=rate_error_l[:,thr_index].reshape((2, 1)), marker='o', ls='none', label=str(pt_thrs[thr_index])+' GeV')
-        # ax4.set_title('Efficiency vs rate for loose cut based discriminator')
-        # ax4.set_ylabel('Efficiency')
-        # ax4.set_xlabel('Rate [Hz]')
-        # ax4.legend(loc='lower right')
-        # ax5.errorbar(rate_total_m[thr_index],efficiency_m[thr_index],yerr=efficiency_error_m[:,thr_index].reshape((2, 1)),xerr=rate_error_m[:,thr_index].reshape((2, 1)), marker='o', ls='none', label=str(pt_thrs[thr_index])+' GeV')
-        # ax5.set_title('Efficiency vs rate for medium cut based discriminator')
-        # ax5.set_ylabel('Efficiency')
-        # ax5.set_xlabel('Rate [Hz]')
-        # ax5.legend(loc='lower right')
-        # ax6.errorbar(rate_total_t[thr_index],efficiency_t[thr_index],yerr=efficiency_error_t[:,thr_index].reshape((2, 1)),xerr=rate_error_t[:,thr_index].reshape((2, 1)), marker='o', ls='none', label=str(pt_thrs[thr_index])+' GeV')
-        # ax6.set_title('Efficiency vs rate for tight cut based discriminator')
-        # ax6.set_ylabel('Efficiency')
-        # ax6.set_xlabel('Rate [Hz]')
-        # ax6.legend(loc='lower right')
+
         ###### from here
         full_f_xy[thr_index] = interpolate.interp1d(full_deep_eff[thr_index], full_deep_rate[thr_index])
         full_f_yx[thr_index] = interpolate.interp1d(full_deep_rate[thr_index], full_deep_eff[thr_index])
@@ -415,8 +313,11 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
         ax[thr_index].errorbar(efficiency_l[thr_index], rate_total_l[thr_index],  xerr=efficiency_error_l[:,thr_index].reshape((2, 1)), yerr=rate_error_l[:,thr_index].reshape((2, 1)), marker='o', linestyle='--', label='Loose cut based')
         ax[thr_index].errorbar(efficiency_m[thr_index], rate_total_m[thr_index],  xerr=efficiency_error_m[:,thr_index].reshape((2, 1)), yerr=rate_error_m[:,thr_index].reshape((2, 1)), marker='o', linestyle='--', label='Medium cut based')
         ax[thr_index].errorbar(efficiency_t[thr_index], rate_total_t[thr_index],  xerr=efficiency_error_t[:,thr_index].reshape((2, 1)), yerr=rate_error_t[:,thr_index].reshape((2, 1)), marker='o', linestyle='--', label='Tight cut based')
-        ax[thr_index].set_xlim([0, 0.3])
-        ax[thr_index].set_ylim([0, 80])
+        ax[thr_index].set_xlim([0, 0.06])
+        if(pt_thrs[thr_index] < 35):
+            ax[thr_index].set_ylim([0, 200])
+        else:
+            ax[thr_index].set_ylim([0, 80])
         ax[thr_index].set_title('Rate vs efficiency for Pt > '+str(pt_thrs[thr_index])+' GeV')
         ax[thr_index].set_ylabel('Rate [Hz]')
         ax[thr_index].set_xlabel('Efficiency')
@@ -424,17 +325,7 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
         ax[thr_index].legend(loc='upper left')
         ######
 
-    # ax2.errorbar((pt_bins[1:] + pt_bins[:-1]) / 2,efficiency_base_l,yerr=error_efficiency_l,xerr=error_pt_total, ls='none', label='Loose cut based') #non disegna i punti per ogni pt
-    # ax2.errorbar((pt_bins[1:] + pt_bins[:-1]) / 2,efficiency_base_m,yerr=error_efficiency_m,xerr=error_pt_total, ls='none', label='Medium cut based')
-    # ax2.errorbar((pt_bins[1:] + pt_bins[:-1]) / 2,efficiency_base_t,yerr=error_efficiency_t,xerr=error_pt_total, ls='none', label='Tight cut based')
-    # ax2.set_title('Efficiency vs pt for each cut based discriminator')
-    # ax2.set_ylabel('Efficiency')
-    # ax2.set_xlabel('Pt [GeV]')
-    # ax2.legend()
-
-    # fig1.savefig("eff_vs_pt_deep.pdf")
-    # fig2.savefig("eff_vs_pt_cutbased.pdf")
-        fig[thr_index].savefig('eff_vs_rate_thr_'+str(pt_thrs[thr_index])+'_small.pdf')
+        fig[thr_index].savefig('eff_vs_rate_thr_'+str(pt_thrs[thr_index])+'.pdf')
 
     print("pt thrs:",pt_thrs)
     print("eff deeptau:",fix_eff)
@@ -448,40 +339,17 @@ if not tfile.IsZombie() and not tfile_rate.IsZombie():
 
     fig_eff.savefig('eff_vs_pt_thr.pdf')
 
-    print("pt thrs:",pt_thrs)
+    print("pt thrs:",pt_thrs_new)
     print("eff deeptau:",fix_rate)
-    ax_rate.errorbar(pt_thrs,fix_rate, marker='o', ls='none', label='DeepTau discriminator')
+    ax_rate.errorbar(pt_thrs_new,fix_rate, marker='o', ls='none', label='DeepTau discriminator')
     ax_rate.errorbar(35,base_rate, marker='o', ls='none', label='Medium cut based')
     ax_rate.set_title('Rate vs pt threshold')
-    ax_rate.set_ylabel('Rate')
+    ax_rate.set_ylabel('Rate [Hz]')
     ax_rate.set_xlabel('Pt [GeV]')
     ax_rate.grid(True)
     ax_rate.legend()
 
     fig_rate.savefig('rate_vs_pt_thr.pdf')
-
-
-
-    # print("initial_rate vector: ",initial_rate)
-    # print("max_rate vector: ",max_rate)
-    #print("efficiency total: ",efficiency_total)
-
-
-
-
-
-    # canvas = ROOT.TCanvas("pippo","pippo")
-    # canvas.cd()
-    # myTree.Draw("deepTau_VSjet:tau_pt", "tau_pt<200","colz")
-    # canvas.Print("deepTau_vs_pt.pdf")
-    # hist = TH2F("hist","hist",100,0,200,1000,0,1)
-    # myTree.Draw("deepTau_VSjet:tau_pt>>hist", "tau_pt<200","colz")
-    # canvas2 = ROOT.TCanvas("pippo1","pippo1")
-    # canvas2.cd()
-    # hist.Scale(1/initialCounter.GetEntries())
-    # hist.Draw("colz")
-    # canvas2.Print("efficiency.pdf")
-
 
 else:
     print('Could not load file {0!r}'.format(fname))
